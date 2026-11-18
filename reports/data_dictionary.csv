@@ -1,0 +1,13 @@
+Column Name,Pandas Dtype,Non-Null Count,Null Count,Null %,Sample Value,Physical Units,Description
+country,object,854,0,0.0,India,Categorical,Name of the country
+location_name,object,854,0,0.0,Nellore,Categorical,Name of the monitored city/location
+region,object,854,0,0.0,Andhra Pradesh,Categorical,State/Administrative region or province
+latitude,float64,854,0,0.0,14.44,Degrees (-90 to +90),Geographical latitude coordinate
+longitude,float64,854,0,0.0,79.99,Degrees (-180 to +180),Geographical longitude coordinate
+last_updated,object,854,0,0.0,2025-01-01 00:00,Datetime string,Local observation timestamp (YYYY-MM-DD HH:MM)
+temperature_celsius,float64,854,0,0.0,22.123960374748684,°C,Ambient air temperature in Celsius
+humidity,float64,854,0,0.0,63.01842705063047,%,Relative atmospheric humidity percentage
+precip_mm,float64,854,0,0.0,4.561690601773128,Millimeters (mm),Precipitation/rainfall accumulation
+uv_index,float64,854,0,0.0,7.20980023430608,Index (0-12+),Solar ultraviolet radiation index
+pressure_mb,float64,854,0,0.0,1007.8573225073555,Millibars (hPa),Barometric atmospheric pressure
+wind_kph,float64,854,0,0.0,13.807975274547424,km/h,Sustained wind speed in kilometers per hour
