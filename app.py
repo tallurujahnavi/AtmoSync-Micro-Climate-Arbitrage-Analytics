@@ -2,44 +2,24 @@
 Run: streamlit run app.py
 Data: Kaggle 'Global Weather Repository' CSV (upload in sidebar or put in data/raw/)."""
 import os
+import sys
+from pathlib import Path
 import numpy as np, pandas as pd, plotly.express as px, streamlit as st
 from scipy import stats
 
+# Add src module to search path
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+from arbitrage import (
+    CROPS,
+    WEIGHTS,
+    COLS,
+    SEASONS_MAPPING as SEASON,
+    band_score,
+    calculate_crop_suitability as suitability,
+    haversine_distance as haversine,
+)
+
 st.set_page_config(page_title="AtmoSync", page_icon="🌾", layout="wide")
-
-# ---------- Crop ideal ranges: (ideal_low, ideal_high, tolerance) ----------
-# Approximate agronomic ranges (assumption; adjust with mentor/agri sources).
-CROPS = {
-    "Rice":      {"temp": (22, 32, 10), "hum": (60, 90, 30), "rain": (0, 12, 10), "uv": (3, 9, 5)},
-    "Wheat":     {"temp": (12, 25, 10), "hum": (40, 70, 25), "rain": (0, 4, 6),  "uv": (3, 8, 5)},
-    "Cotton":    {"temp": (21, 34, 10), "hum": (40, 75, 25), "rain": (0, 5, 8),  "uv": (4, 10, 5)},
-    "Maize":     {"temp": (20, 30, 10), "hum": (50, 80, 25), "rain": (0, 8, 8),  "uv": (3, 9, 5)},
-    "Groundnut": {"temp": (22, 32, 10), "hum": (45, 75, 25), "rain": (0, 5, 8),  "uv": (4, 10, 5)},
-    "Sugarcane": {"temp": (24, 35, 10), "hum": (60, 85, 25), "rain": (0, 10, 10), "uv": (4, 10, 5)},
-}
-WEIGHTS = {"temp": 0.4, "hum": 0.25, "rain": 0.2, "uv": 0.15}
-COLS = {"temp": "temperature_celsius", "hum": "humidity", "rain": "precip_mm", "uv": "uv_index"}
-SEASON = {m: "Kharif (Jun-Oct)" for m in range(6, 11)}
-SEASON.update({m: "Rabi (Nov-Mar)" for m in (11, 12, 1, 2, 3)})
-SEASON.update({4: "Zaid (Apr-May)", 5: "Zaid (Apr-May)"})
-
-
-def band_score(x, lo, hi, tol):
-    """1.0 inside ideal band, falls linearly to 0 at `tol` outside it."""
-    d = np.where(x < lo, lo - x, np.where(x > hi, x - hi, 0))
-    return np.clip(1 - d / tol, 0, 1)
-
-
-def suitability(df, crop):
-    r = CROPS[crop]
-    s = sum(WEIGHTS[k] * band_score(df[COLS[k]], *r[k]) for k in r)
-    return (s * 100).round(2)
-
-
-def haversine(lat1, lon1, lat2, lon2):
-    p = np.pi / 180
-    a = np.sin((lat2 - lat1) * p / 2) ** 2 + np.cos(lat1 * p) * np.cos(lat2 * p) * np.sin((lon2 - lon1) * p / 2) ** 2
-    return 12742 * np.arcsin(np.sqrt(a))
 
 
 @st.cache_data(show_spinner="Loading and cleaning data...")
