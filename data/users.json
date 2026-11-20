@@ -1,0 +1,30 @@
+{
+  "jahnavi@atmosync.org": {
+    "name": "Jahnavi Talluru",
+    "email": "jahnavi@atmosync.org",
+    "role": "Agronomist",
+    "organization": "Andhra Agricultural Research Consortium",
+    "password_hash": "077d1cf29426c4cda94f4134632c9d19533de0d870732519896f69ae9acdcb7f"
+  },
+  "ramesh@atmosync.org": {
+    "name": "Ramesh Patel",
+    "email": "ramesh@atmosync.org",
+    "role": "Farm Manager",
+    "organization": "Deccan Farmers Producer Org (FPO)",
+    "password_hash": "4c2b52ccf2119ad0d72ead9647c150335d4d04e2c978e8f8ef25acc0f9c1e456"
+  },
+  "anita@atmosync.org": {
+    "name": "Anita Rao",
+    "email": "anita@atmosync.org",
+    "role": "Supply Chain Analyst",
+    "organization": "AgriLogistics India Network",
+    "password_hash": "b13a32fd08eb4736f6f42f3631ccf47f55f913b9a4ef4b4b1055f9706047fc7d"
+  },
+  "mentor_eval@infotact.in": {
+    "name": "Infotact Mentor",
+    "email": "mentor_eval@infotact.in",
+    "role": "Farm Manager",
+    "organization": "Infotact Academic Evaluation",
+    "password_hash": "b591e6e85e40c37be08d0e90ba6362facb6f266fa1afcda75a418e0ae40dbfe0"
+  }
+}

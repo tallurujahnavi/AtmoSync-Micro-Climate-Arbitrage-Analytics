@@ -18,8 +18,110 @@ from arbitrage import (
     calculate_crop_suitability as suitability,
     haversine_distance as haversine,
 )
+from auth import (
+    authenticate_user,
+    register_user,
+    get_demo_accounts,
+    ROLES,
+)
 
-st.set_page_config(page_title="AtmoSync", page_icon="🌾", layout="wide")
+st.set_page_config(page_title="AtmoSync: Micro-Climate Arbitrage", page_icon="🌾", layout="wide")
+
+# ---------------- Session Authentication ----------------
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+    st.session_state["user"] = None
+
+
+def render_login_view():
+    st.markdown("""
+        <div style="text-align: center; margin-top: 1rem; margin-bottom: 2rem;">
+            <h1 style="color: #166534; font-size: 2.4rem; margin-bottom: 0.2rem;">🌾 AtmoSync Analytics Portal</h1>
+            <p style="color: #4b5563; font-size: 1.15rem; max-width: 700px; margin: 0 auto;">
+                Agro-Climatic Micro-Climate Arbitrage, Spatial Crop Suitability Modeling & Statistical Decision Intelligence
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    auth_tabs = st.tabs(["🚀 One-Click Persona Login", "🔑 Standard Sign In", "📝 Create Account"])
+
+    # --- TAB 1: QUICK EVALUATOR DEMO PERSONAS ---
+    with auth_tabs[0]:
+        st.write("Select a pre-configured professional persona to immediately test role-tailored dashboards:")
+        demo_accounts = get_demo_accounts()
+        cols = st.columns(3)
+
+        for idx, (label, info) in enumerate(demo_accounts.items()):
+            with cols[idx]:
+                st.markdown(f"""
+                    <div style="border: 1px solid #d1fae5; border-radius: 10px; padding: 16px; background-color: #f0fdf4; min-height: 190px;">
+                        <h4 style="color: #065f46; margin-top: 0;">{label}</h4>
+                        <p style="font-size: 0.85rem; color: #374151; margin-bottom: 8px;"><b>Account:</b> {info['email']}</p>
+                        <p style="font-size: 0.82rem; color: #4b5563;">{info['desc']}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+                if st.button(f"Sign in as {info['role']}", key=f"demo_btn_{idx}", use_container_width=True):
+                    ok, user, _ = authenticate_user(info["email"], info["password"])
+                    if ok:
+                        st.session_state["authenticated"] = True
+                        st.session_state["user"] = user
+                        st.rerun()
+
+    # --- TAB 2: STANDARD LOGIN ---
+    with auth_tabs[1]:
+        st.subheader("Sign In with Credentials")
+        col_l1, col_l2 = st.columns([1, 1])
+        with col_l1:
+            login_email = st.text_input("Work Email Address", placeholder="e.g. jahnavi@atmosync.org")
+            login_pass = st.text_input("Password", type="password")
+            if st.button("Sign In", type="primary", use_container_width=True):
+                if login_email and login_pass:
+                    ok, user_data, msg = authenticate_user(login_email, login_pass)
+                    if ok:
+                        st.session_state["authenticated"] = True
+                        st.session_state["user"] = user_data
+                        st.success("Login successful! Redirecting...")
+                        st.rerun()
+                    else:
+                        st.error(msg)
+                else:
+                    st.warning("Please provide both email and password.")
+
+        with col_l2:
+            st.info("""
+                **Quick Reference Credentials:**
+                * **Agronomist**: `jahnavi@atmosync.org` / `agro2026`
+                * **Farm Manager**: `ramesh@atmosync.org` / `farm2026`
+                * **Supply Chain**: `anita@atmosync.org` / `logistics2026`
+            """)
+
+    # --- TAB 3: REGISTRATION ---
+    with auth_tabs[2]:
+        st.subheader("Register a New User Account")
+        c_r1, c_r2 = st.columns(2)
+        with c_r1:
+            reg_name = st.text_input("Full Name", placeholder="e.g. Priya Sharma")
+            reg_email = st.text_input("Email Address", placeholder="priya@agriresearch.org")
+            reg_pass = st.text_input("Set Password", type="password")
+        with c_r2:
+            reg_role = st.selectbox("Professional Persona / Role", list(ROLES.keys()))
+            reg_org = st.text_input("Organization / Affiliation", placeholder="e.g. National Agro Center")
+            st.caption(f"Role Scope: {ROLES[reg_role]}")
+
+        if st.button("Register Account", type="primary"):
+            if reg_name and reg_email and reg_pass:
+                reg_ok, reg_msg = register_user(reg_name, reg_email, reg_pass, reg_role, reg_org)
+                if reg_ok:
+                    st.success(reg_msg)
+                else:
+                    st.error(reg_msg)
+            else:
+                st.warning("Please fill in all mandatory fields.")
+
+
+if not st.session_state["authenticated"]:
+    render_login_view()
+    st.stop()
 
 
 @st.cache_data(show_spinner="Loading and cleaning data...")
@@ -59,6 +161,22 @@ def load_clean(src):
 
 # ---------------- Sidebar ----------------
 st.sidebar.title("🌾 AtmoSync")
+
+# User Session Profile Card
+current_user = st.session_state.get("user", {})
+if current_user:
+    st.sidebar.markdown(f"""
+        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px; margin-bottom: 10px;">
+            <div style="font-weight: 600; color: #166534; font-size: 0.95rem;">👤 {current_user.get('name', 'User')}</div>
+            <div style="color: #15803d; font-size: 0.82rem; font-weight: 500;">🏷️ {current_user.get('role', 'Analyst')}</div>
+            <div style="color: #6b7280; font-size: 0.75rem;">🏢 {current_user.get('organization', 'AtmoSync Research')}</div>
+        </div>
+    """, unsafe_allow_html=True)
+    if st.sidebar.button("🚪 Sign Out", use_container_width=True):
+        st.session_state["authenticated"] = False
+        st.session_state["user"] = None
+        st.rerun()
+
 available_files = {}
 if os.path.exists("data/raw/sample_SYNTHETIC.csv"):
     available_files["Sample Synthetic (India 2025 Multi-location)"] = "data/raw/sample_SYNTHETIC.csv"
@@ -105,6 +223,15 @@ st.title("🌾 AtmoSync: Micro-Climate Arbitrage Analytics")
 st.caption(f"Crop Suitability Index (CSI, 0-100) for **{crop}** in **{country}**. "
            "Arbitrage Score = a location's CSI minus the regional average CSI. "
            "Limitation: no yield/price data, so this is a growing-condition gap, not a profit figure.")
+
+# Persona-Specific Intelligence Callout
+user_role = current_user.get("role", "Agronomist")
+if user_role == "Agronomist":
+    st.info("🔬 **Agronomist View Active**: Biochemical suitability tolerance bands weighted (Temp 40%, Hum 25%, Rain 20%, UV 15%). Analyzing physiological climate stress thresholds.")
+elif user_role == "Farm Manager":
+    st.info("🚜 **Farm Cooperative View Active**: Tracking regional suitability gaps and seasonal planting schedules (Kharif, Rabi, Zaid) to optimize crop yield margins.")
+elif user_role == "Supply Chain Analyst":
+    st.info("🚚 **Supply Chain View Active**: Evaluating inter-district distance radii (Haversine) and procurement arbitrage to minimize haulage costs and harvest risks.")
 
 tabs = st.tabs(["📊 Overview", "🗺️ Map", "🔁 Arbitrage Finder", "📈 Trends", "🌦️ Seasons", "🧪 Statistics", "🧹 Data Quality"])
 

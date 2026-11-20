@@ -49,13 +49,14 @@ $$
 
 ```text
 atmosync-microclimate/
-├── app.py                      # Interactive Streamlit Web Application
+├── app.py                      # Interactive Streamlit Web Application (with RBAC)
 ├── make_sample_data.py         # Synthetic time-series generator (Kharif, Rabi, Zaid)
 ├── requirements.txt            # Python dependencies
 ├── README.md                   # Documentation and project manual
 ├── data/
 │   ├── raw/                    # Raw datasets (Kaggle dump & Synthetic CSVs)
-│   └── processed/              # Cleaned and normalized datasets
+│   ├── processed/              # Cleaned and normalized datasets
+│   └── users.json              # Local persistent user datastore
 ├── notebooks/
 │   ├── 01_data_understanding.ipynb          # Phase 1: Ingestion & Quality Profiling
 │   └── 02_exploratory_data_analysis.ipynb    # Phase 2: Agro-Climatic Profiling & Hypothesis Testing
@@ -63,11 +64,27 @@ atmosync-microclimate/
 │   └── data_dictionary.csv     # Automated schema definitions and physical units
 ├── src/
 │   ├── __init__.py
+│   ├── auth.py                 # RBAC, SHA-256 session management & user credentials
 │   ├── data_loader.py          # Data ingestion and inspection utilities
 │   └── arbitrage.py            # CSI math, Haversine spatial calculations, ANOVA/t-test
 └── tests/
-    └── test_arbitrage.py       # Unit test suite for agronomic math
+    ├── test_arbitrage.py       # Unit test suite for agronomic math
+    └── test_auth.py            # Unit test suite for authentication and RBAC
 ```
+
+---
+
+## 👥 Role-Based Personas & Evaluation Credentials
+
+AtmoSync includes an enterprise Role-Based Access Control (RBAC) portal with pre-seeded personas:
+
+| Persona / Role | Email | Password | Scope & Primary Dashboard Focus |
+| :--- | :--- | :--- | :--- |
+| **Agronomist** | `jahnavi@atmosync.org` | `agro2026` | Deep biochemical tolerance bands, climate stress thresholds, and biological suitability indices. |
+| **Farm Manager** | `ramesh@atmosync.org` | `farm2026` | Regional crop suitability rankings, Kharif/Rabi seasonal scheduling, and yield gaps. |
+| **Supply Chain Analyst** | `anita@atmosync.org` | `logistics2026` | Proximity search, Haversine transport radii (50–1500 km), and inter-district trade gaps. |
+
+*(A **"One-Click Persona Login"** tab is available on the login screen for instant evaluation).*
 
 ---
 
@@ -82,9 +99,8 @@ pip install -r requirements.txt
 
 ### 2. Run Unit Tests
 ```powershell
-python -m pytest tests/
-# or
 python tests/test_arbitrage.py
+python tests/test_auth.py
 ```
 
 ### 3. Launch Dashboard
