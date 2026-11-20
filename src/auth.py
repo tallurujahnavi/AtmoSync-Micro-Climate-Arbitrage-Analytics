@@ -17,28 +17,29 @@ USER_DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "users.json"
 
 # Defined industry user personas for agro-climatic analytics
 ROLES = {
+    "Commodities Trader": "Infotact Desk: Real-time Spoilage Arbitrage tracking, container rerouting, and cargo value preservation.",
     "Agronomist": "Focus on crop tolerance bands, climate stress thresholds, and biological suitability indices.",
+    "Supply Chain Analyst": "Focus on haversine transport radii, inter-district procurement gaps, and cold-chain logistics.",
     "Farm Manager": "Focus on regional yield arbitrage, location rankings, and seasonal Kharif/Rabi scheduling.",
-    "Supply Chain Analyst": "Focus on haversine transport radii, inter-district procurement gaps, and regional arbitrage.",
 }
 
 # Default seeded credentials for immediate mentor/evaluator demo
 DEFAULT_USERS: Dict[str, Dict] = {
-    "jahnavi@atmosync.org": {
+    "trader@infotact.in": {
         "name": "Jahnavi Talluru",
+        "email": "trader@infotact.in",
+        "role": "Commodities Trader",
+        "organization": "Infotact Global Commodities Desk",
+        # sha256 for "trader2026"
+        "password_hash": "66a509d0c8f3e005466b9ee2b8d3a7bf9c3e6d53d4b1c1cbaf05b0bcbc066205",
+    },
+    "jahnavi@atmosync.org": {
+        "name": "Dr. Jahnavi Talluru",
         "email": "jahnavi@atmosync.org",
         "role": "Agronomist",
         "organization": "Andhra Agricultural Research Consortium",
         # sha256 for "agro2026"
         "password_hash": "077d1cf29426c4cda94f4134632c9d19533de0d870732519896f69ae9acdcb7f",
-    },
-    "ramesh@atmosync.org": {
-        "name": "Ramesh Patel",
-        "email": "ramesh@atmosync.org",
-        "role": "Farm Manager",
-        "organization": "Deccan Farmers Producer Org (FPO)",
-        # sha256 for "farm2026"
-        "password_hash": "4c2b52ccf2119ad0d72ead9647c150335d4d04e2c978e8f8ef25acc0f9c1e456",
     },
     "anita@atmosync.org": {
         "name": "Anita Rao",
@@ -149,22 +150,22 @@ def register_user(
 def get_demo_accounts() -> Dict[str, Dict]:
     """Returns sample demo persona profiles for quick evaluation."""
     return {
+        "Commodities Trader (Infotact Core Desk)": {
+            "email": "trader@infotact.in",
+            "password": "trader2026",
+            "role": "Commodities Trader",
+            "desc": "Official Infotact Desk: Real-time container telemetry, spoilage curves, and Spoilage Arbitrage rerouting.",
+        },
         "Agronomist (Field Researcher)": {
             "email": "jahnavi@atmosync.org",
             "password": "agro2026",
             "role": "Agronomist",
-            "desc": "Access full agronomic tolerance bands, climate stress curves, and biological index metrics.",
-        },
-        "Farm Manager (FPO Director)": {
-            "email": "ramesh@atmosync.org",
-            "password": "farm2026",
-            "role": "Farm Manager",
-            "desc": "Access regional crop suitability rankings, Kharif/Rabi seasonal scheduling, and yield gaps.",
+            "desc": "Access biochemical tolerance bands, climate stress curves, and crop suitability models.",
         },
         "Supply Chain Analyst (AgriLogistics)": {
             "email": "anita@atmosync.org",
             "password": "logistics2026",
             "role": "Supply Chain Analyst",
-            "desc": "Access proximity search, haversine transport radii (50-1500 km), and inter-district trade gaps.",
+            "desc": "Access proximity haulage radii (50-1500 km), cold-chain transit corridors, and route risk.",
         },
     }

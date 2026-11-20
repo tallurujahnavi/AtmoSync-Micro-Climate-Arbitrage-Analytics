@@ -1,47 +1,73 @@
-# 🌾 AtmoSync: Micro-Climate Arbitrage Analytics (Agriculture)
+# 🚢 AtmoSync: Micro-Climate Arbitrage Analytics
 
-> **Organization:** Infotact Solutions | **Role:** Data Associate L1 Intern  
-> **Track:** Agro-Climatic Data Analytics, Spatial Modeling & Statistical Validation
+> **Organization:** Infotact Solutions  
+> **Track:** Advanced Data Analytics & Engineering (Global Logistics & Commodities)  
+> **Project 1:** Real-World Applications – Hands-on System Building
 
-**AtmoSync** is an interactive, analytical platform designed to identify, quantify, and exploit micro-climatic growing condition differentials across agricultural zones. By evaluating atmospheric indicators against agronomic crop requirements, AtmoSync surfaces micro-climate "arbitrage" opportunities—neighboring locations offering significantly superior crop suitability without massive logistical displacement.
+[![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/)
+[![dbt Core](https://img.shields.io/badge/dbt-Core-orange.svg)](https://www.getdbt.com/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-red.svg)](https://streamlit.io/)
+[![Unit Tests](https://img.shields.io/badge/Unit%20Tests-Passing-brightgreen.svg)]()
 
 ---
 
-## 📐 Mathematical Formulation
+## 📌 Problem Statement (Infotact Official Specification)
+Traditional supply chain analytics rely on standard transit times and macro-weather forecasts. They fail to track how real-time, hyper-local micro-climate shifts (e.g., sudden temperature/humidity spikes inside a refrigerated shipping container) degrade agricultural commodities before they reach the market.
 
-### 1. Crop Suitability Index (CSI)
-For an atmospheric parameter $x \in \{\text{temp}, \text{hum}, \text{rain}, \text{uv}\}$, ideal agronomic band $[\text{low}, \text{high}]$, and tolerance $\delta$:
+## 🎯 Use Case
+A commodities trader at **Infotact** monitors the **AtmoSync** dashboard. The streaming pipeline detects that **Container A's** internal temperature has drifted from its optimal band, accelerating the spoilage rate of the avocados inside. 
 
-$$
-S(x) = \text{clip}\left(1 - \frac{\max(0, \text{low} - x, x - \text{high})}{\delta}, 0, 1\right)
-$$
+The dashboard instantly calculates **"Spoilage Arbitrage"** and alerts the trader to reroute the shipment to a closer, secondary market—securing a premium price before the goods degrade below commercial quality thresholds.
 
-The composite Crop Suitability Index (scaled 0–100) is defined as:
+---
 
-$$
-\text{CSI} = 100 \times \sum_{i} w_i \cdot S(x_i)
-$$
+## 📐 Mathematical Formulation: Spoilage Arbitrage
 
-where default agronomic weights are:
-* **Temperature ($w_{\text{temp}} = 0.40$)**: Controls enzymatic reactions and metabolic rates.
-* **Relative Humidity ($w_{\text{hum}} = 0.25$)**: Dictates vapor pressure deficit (VPD) and fungal pathogen risk.
-* **Precipitation ($w_{\text{rain}} = 0.20$)**: Direct root-zone moisture input.
-* **Solar UV Index ($w_{\text{uv}} = 0.15$)**: Proxy for photosynthetically active radiation (PAR).
-
-Supported crops: **Rice, Wheat, Cotton, Maize, Groundnut, Sugarcane**.
-
-### 2. Spatial Arbitrage Finder
-Spatial separation between locations $A(\phi_1, \lambda_1)$ and $B(\phi_2, \lambda_2)$ is calculated via the **Haversine Formula**:
+### 1. Thermal Respiration Degradation Kinetics (Arrhenius / $Q_{10}$)
+When a refrigerated reefer container experiences compressor failure or insulation breach, the biological spoilage rate accelerates exponentially:
 
 $$
-d = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta\phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta\lambda}{2}\right)}\right)
+M_{\text{spoilage}} = Q_{10}^{\frac{\Delta T}{10}} \times \left(1 + \frac{|\text{Hum} - \text{Hum}_{\text{ideal}}|}{100} \times \alpha\right)
 $$
 
-The **Arbitrage Gain** relative to origin location $A$ within search radius $r$:
+The remaining shelf life (in hours) decreases dynamically:
 
 $$
-\Delta\text{CSI}_{A \to B} = \text{CSI}_B - \text{CSI}_A \quad \text{for } d(A, B) \le r
+\text{ShelfLife}_{\text{remaining}} = \frac{\text{BaseShelfLife}}{M_{\text{spoilage}}}
 $$
+
+### 2. Spoilage Arbitrage Financial Decision
+If $\text{ShelfLife}_{\text{remaining}} < T_{\text{primary\_destination}}$, continuing on the primary route causes total commercial rejection on arrival ($\text{Salvage} \approx 5\%$).
+
+By diverting to a closer secondary market ($T_{\text{secondary}} < \text{ShelfLife}_{\text{remaining}}$):
+
+$$
+\text{Net Secondary Value} = (V_{\text{cargo}} \times P_{\text{secondary\_factor}}) - (\text{Distance}_{\text{sec}} \times \text{Tonnage} \times C_{\text{haulage}})
+$$
+
+$$
+\text{Spoilage Arbitrage Gain} = \text{Net Secondary Value} - \text{Primary Salvage Floor}
+$$
+
+---
+
+## 🏗️ Architecture & Technology Stack
+
+```
+[IoT Telemetry Simulator] (Temp, Hum, Vibration)
+           │
+           ▼
+[Apache Kafka Event Stream] (High-throughput Streaming Ingestion)
+           │
+           ▼
+[Snowflake / Cloud Warehouse] (Raw JSON Variant Tables)
+           │
+           ▼
+[dbt Core Transformations] (stg_telemetry + fct_spoilage_arbitrage.sql)
+           │
+           ▼
+[AtmoSync BI & Executive Desk] (Streamlit / Superset Trader Portal)
+```
 
 ---
 
@@ -49,39 +75,47 @@ $$
 
 ```text
 atmosync-microclimate/
-├── app.py                      # Interactive Streamlit Web Application (with RBAC)
-├── make_sample_data.py         # Synthetic time-series generator (Kharif, Rabi, Zaid)
+├── app.py                      # Interactive Commodities Trader & Arbitrage Portal
 ├── requirements.txt            # Python dependencies
-├── README.md                   # Documentation and project manual
+├── README.md                   # Project documentation & Infotact specifications
+├── dbt/
+│   ├── dbt_project.yml         # dbt project configuration
+│   └── models/
+│       ├── staging/
+│       │   ├── stg_container_telemetry.sql   # JSON payload extraction & cleaning
+│       │   └── stg_commodity_pricing.sql     # Wholesale spot market pricing
+│       └── marts/
+│           └── fct_spoilage_arbitrage.sql    # Degradation curves & arbitrage in pure SQL
 ├── data/
-│   ├── raw/                    # Raw datasets (Kaggle dump & Synthetic CSVs)
-│   ├── processed/              # Cleaned and normalized datasets
+│   ├── raw/                    # Raw datasets (Kaggle & synthetic time-series)
+│   ├── processed/              # Normalized datasets
 │   └── users.json              # Local persistent user datastore
 ├── notebooks/
-│   ├── 01_data_understanding.ipynb          # Phase 1: Ingestion & Quality Profiling
-│   └── 02_exploratory_data_analysis.ipynb    # Phase 2: Agro-Climatic Profiling & Hypothesis Testing
+│   ├── 01_data_understanding.ipynb          # Phase 1: Ingestion & Profiling
+│   └── 02_exploratory_data_analysis.ipynb    # Phase 2: Agro-Climatic Profiling
 ├── reports/
 │   └── data_dictionary.csv     # Automated schema definitions and physical units
 ├── src/
 │   ├── __init__.py
 │   ├── auth.py                 # RBAC, SHA-256 session management & user credentials
+│   ├── iot_simulator.py        # High-velocity container IoT sensor generator
+│   ├── spoilage_arbitrage.py   # Spoilage kinetics & Spoilage Arbitrage calculation
 │   ├── data_loader.py          # Data ingestion and inspection utilities
-│   └── arbitrage.py            # CSI math, Haversine spatial calculations, ANOVA/t-test
+│   └── arbitrage.py            # Regional agronomic suitability & Haversine metrics
 └── tests/
-    ├── test_arbitrage.py       # Unit test suite for agronomic math
-    └── test_auth.py            # Unit test suite for authentication and RBAC
+    ├── test_arbitrage.py           # Unit tests for agronomic formulas
+    ├── test_auth.py                # Unit tests for authentication & RBAC
+    └── test_spoilage_arbitrage.py  # Unit tests for Spoilage Arbitrage calculations
 ```
 
 ---
 
-## 👥 Role-Based Personas & Evaluation Credentials
-
-AtmoSync includes an enterprise Role-Based Access Control (RBAC) portal with pre-seeded personas:
+## 👥 Demo Credentials for Mentors
 
 | Persona / Role | Email | Password | Scope & Primary Dashboard Focus |
 | :--- | :--- | :--- | :--- |
+| **Commodities Trader** | `trader@infotact.in` | `trader2026` | Real-time container telemetry, spoilage decay curves, and Spoilage Arbitrage rerouting. |
 | **Agronomist** | `jahnavi@atmosync.org` | `agro2026` | Deep biochemical tolerance bands, climate stress thresholds, and biological suitability indices. |
-| **Farm Manager** | `ramesh@atmosync.org` | `farm2026` | Regional crop suitability rankings, Kharif/Rabi seasonal scheduling, and yield gaps. |
 | **Supply Chain Analyst** | `anita@atmosync.org` | `logistics2026` | Proximity search, Haversine transport radii (50–1500 km), and inter-district trade gaps. |
 
 *(A **"One-Click Persona Login"** tab is available on the login screen for instant evaluation).*
@@ -90,32 +124,21 @@ AtmoSync includes an enterprise Role-Based Access Control (RBAC) portal with pre
 
 ## 🚀 Getting Started
 
-### 1. Prerequisites & Virtual Environment
+### 1. Installation
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 2. Run Unit Tests
+### 2. Run All Unit Tests
 ```powershell
 python tests/test_arbitrage.py
 python tests/test_auth.py
+python tests/test_spoilage_arbitrage.py
 ```
 
 ### 3. Launch Dashboard
 ```powershell
 streamlit run app.py
 ```
-
----
-
-## 📊 Analytical Features
-1. **Interactive Geospatial Map**: Color-coded arbitrage scatter map visualising condition gaps across regions.
-2. **Radius Arbitrage Finder**: Select any focal city and search radius (50–1500 km) to rank nearby alternatives.
-3. **Seasonal Aggregations**: Kharif (Jun–Oct), Rabi (Nov–Mar), and Zaid (Apr–May) performance breakdown.
-4. **Hypothesis Testing**:
-   - One-way ANOVA for regional variance ($H_1$).
-   - Welch's two-sample t-test between location pairs ($H_2$).
-   - Pearson correlation across environmental indicators ($H_3$).
-5. **Data Cleaning & Auditing**: IQR outlier clipping (3×IQR), per-location median fill, and schema verification.

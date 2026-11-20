@@ -24,6 +24,8 @@ from auth import (
     get_demo_accounts,
     ROLES,
 )
+from iot_simulator import generate_fleet_telemetry, COMMODITY_SPECS
+from spoilage_arbitrage import compute_fleet_arbitrage_summary, evaluate_container_arbitrage
 
 st.set_page_config(page_title="AtmoSync: Micro-Climate Arbitrage", page_icon="🌾", layout="wide")
 
@@ -177,6 +179,166 @@ if current_user:
         st.session_state["user"] = None
         st.rerun()
 
+# Analytics Module Selector
+default_idx = 0 if current_user.get("role") in ["Commodities Trader", "Supply Chain Analyst"] else 1
+analytics_mode = st.sidebar.radio(
+    "📊 Analytical Focus",
+    ["🚢 Cold Chain Spoilage Arbitrage (Infotact Core)", "🌾 Agro-Climatic Growing Suitability"],
+    index=default_idx
+)
+
+if analytics_mode == "🚢 Cold Chain Spoilage Arbitrage (Infotact Core)":
+    # =========================================================================
+    # INFOTACT PROJECT 1: COLD CHAIN SPOILAGE ARBITRAGE ANALYTICS
+    # =========================================================================
+    st.title("🚢 AtmoSync: Micro-Climate Spoilage Arbitrage")
+    st.caption("Real-Time IoT Container Telemetry, Arrhenius Degradation Kinetics & Secondary Market Diversion (Infotact Solutions Commodities Desk)")
+
+    st.info("💡 **Problem Statement (Infotact Use Case)**: Container internal temperature and humidity drift accelerates commodity degradation during transit. "
+            "AtmoSync calculates **Spoilage Arbitrage** in real time and alerts the commodities trader to reroute shipments to closer secondary markets before quality falls below commercial thresholds.")
+
+    if "fleet_data" not in st.session_state:
+        st.session_state["fleet_data"] = generate_fleet_telemetry(num_containers=8)
+    if "rerouted_containers" not in st.session_state:
+        st.session_state["rerouted_containers"] = set()
+
+    col_btn1, col_btn2 = st.columns([1, 4])
+    with col_btn1:
+        if st.button("🔄 Stream New IoT Packets", use_container_width=True):
+            st.session_state["fleet_data"] = generate_fleet_telemetry(num_containers=8)
+            st.toast("New high-throughput Kafka IoT packets ingested into warehouse!")
+
+    fleet_df = compute_fleet_arbitrage_summary(st.session_state["fleet_data"])
+
+    # High-level executive KPI metrics
+    tot_containers = len(fleet_df)
+    at_risk_df = fleet_df[fleet_df["alert_level"].isin(["CRITICAL_SPOILAGE_RISK", "ARBITRAGE_OPPORTUNITY", "WARNING"])]
+    tot_at_risk = len(at_risk_df)
+    tot_cargo_val = fleet_df["cargo_value_usd"].sum()
+    tot_arbitrage_gain = fleet_df["spoilage_arbitrage_gain_usd"].sum()
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Containers Tracked", tot_containers)
+    m2.metric("Micro-Climate Drift Alerts", tot_at_risk, delta=f"{tot_at_risk} At-Risk" if tot_at_risk else "Normal", delta_color="inverse")
+    m3.metric("Fleet Cargo Value", f"${tot_cargo_val:,.0f}")
+    m4.metric("Capturable Spoilage Arbitrage", f"${tot_arbitrage_gain:,.2f}", delta="Net Capital Saved", delta_color="normal")
+
+    t1, t2, t3, t4 = st.tabs([
+        "🚨 Live Fleet Telemetry & Arbitrage Desk",
+        "🗺️ Geospatial Rerouting Map",
+        "📈 Arrhenius Spoilage Kinetics",
+        "🏗️ Data Architecture (Kafka → Snowflake → dbt)"
+    ])
+
+    # --- TAB 1: FLEET MONITOR & TRADER ACTION ---
+    with t1:
+        st.subheader("Live Shipping Container Telemetry Stream")
+        display_cols = [
+            "container_id", "commodity", "origin", "primary_destination",
+            "internal_temp_celsius", "internal_humidity_percent", "vibration_g",
+            "hours_remaining_shelf_life", "hours_to_primary_market",
+            "spoilage_arbitrage_gain_usd", "action_decision"
+        ]
+        st.dataframe(fleet_df[display_cols].round(2), use_container_width=True, hide_index=True)
+
+        st.divider()
+        st.subheader("🎯 Active Commodity Trader Intervention")
+        urgent_candidates = fleet_df[fleet_df["action_decision"].str.contains("REROUTE")]
+
+        if not urgent_candidates.empty:
+            chosen_id = st.selectbox("Select Container for Reroute Evaluation", urgent_candidates["container_id"].tolist())
+            chosen = urgent_candidates[urgent_candidates["container_id"] == chosen_id].iloc[0]
+
+            c_info1, c_info2 = st.columns([2, 1])
+            with c_info1:
+                st.warning(f"⚠️ **Alert for {chosen['container_id']} ({chosen['commodity']})**: {chosen['recommendation']}")
+                st.write(f"• **Current Micro-Climate**: {chosen['internal_temp_celsius']:.1f}°C (Ideal: 4-7°C), Humidity: {chosen['internal_humidity_percent']:.1f}%")
+                st.write(f"• **Degradation Acceleration**: Respiration rate accelerated by **{chosen['spoilage_rate_multiplier']}x** normal speed.")
+                st.write(f"• **Transit Time vs. Shelf Life**: Transit to primary destination ({chosen['primary_destination']}) requires **{chosen['hours_to_primary_market']} hours**, but remaining shelf-life is only **{chosen['hours_remaining_shelf_life']} hours**!")
+                st.error(f"❌ **Primary Market Outcome**: Complete loss on arrival. Estimated salvage value: **${chosen['primary_realized_value_usd']:,.2f}**.")
+                st.success(f"✅ **Secondary Market Diversion**: Rerouting to **{chosen['secondary_destination']}** requires only **{chosen['hours_to_secondary_market']} hours**. Estimated net realization: **${chosen['secondary_net_value_usd']:,.2f}**.")
+
+            with c_info2:
+                st.metric("Net Spoilage Arbitrage", f"${chosen['spoilage_arbitrage_gain_usd']:,.2f}")
+                if chosen_id in st.session_state["rerouted_containers"]:
+                    st.success("✅ **REROUTE ORDER EXECUTED**: Carrier notified, GPS waypoint updated.")
+                else:
+                    if st.button(f"⚡ Execute Reroute to {chosen['secondary_destination']}", type="primary", use_container_width=True):
+                        st.session_state["rerouted_containers"].add(chosen_id)
+                        st.balloons()
+                        st.rerun()
+        else:
+            st.success("All containers currently within optimal micro-climate bands. No emergency diversions required.")
+
+    # --- TAB 2: GEOSPATIAL MAP ---
+    with t2:
+        st.subheader("Interactive Transit Fleet & Diversion Corridors")
+        scatter_fn = getattr(px, "scatter_map", None) or px.scatter_mapbox
+        map_fig = scatter_fn(
+            fleet_df,
+            lat="current_latitude",
+            lon="current_longitude",
+            color="action_decision",
+            size="cargo_value_usd",
+            hover_name="container_id",
+            hover_data=["commodity", "internal_temp_celsius", "primary_destination", "secondary_destination", "spoilage_arbitrage_gain_usd"],
+            zoom=4.5,
+            height=600,
+            title="Real-Time Container Coordinates & Thermal Drift Status"
+        )
+        map_style_key = "map_style" if hasattr(px, "scatter_map") else "mapbox_style"
+        map_fig.update_layout(**{map_style_key: "open-street-map"}, margin=dict(l=0, r=0, t=40, b=0))
+        st.plotly_chart(map_fig, use_container_width=True)
+
+    # --- TAB 3: SPOILAGE KINETICS ---
+    with t3:
+        st.subheader("Arrhenius Respiration Kinetics & Quality Decay Curves")
+        st.caption("Visualizing commodity shelf-life degradation over transit hours at optimal temperature (4°C) vs. refrigeration failure drift (16°C).")
+
+        hours_range = np.linspace(0, 168, 100)
+        # Optimal decay vs drifted decay
+        optimal_decay = np.clip(100.0 - (hours_range / 168.0) * 100.0, 0, 100)
+        drifted_decay = np.clip(100.0 - (hours_range / (168.0 / 2.9)) * 100.0, 0, 100)
+
+        kinetics_df = pd.DataFrame({
+            "Transit Hours Elapsed": np.concatenate([hours_range, hours_range]),
+            "Commodity Quality Index (%)": np.concatenate([optimal_decay, drifted_decay]),
+            "Micro-Climate Condition": ["Reefer Optimal (4°C - 7°C)"] * 100 + ["Reefer Thermal Drift (16.5°C)"] * 100
+        })
+
+        decay_chart = px.line(
+            kinetics_df,
+            x="Transit Hours Elapsed",
+            y="Commodity Quality Index (%)",
+            color="Micro-Climate Condition",
+            title="Shelf-Life Quality Degradation Rate (Hass Avocados)"
+        )
+        decay_chart.add_hline(y=20, line_dash="dash", line_color="red", annotation_text="Commercial Spoilage Threshold")
+        st.plotly_chart(decay_chart, use_container_width=True)
+
+    # --- TAB 4: ELT DATA ARCHITECTURE ---
+    with t4:
+        st.subheader("Infotact Modern Data Stack (MDS) Pipeline Architecture")
+        st.markdown("""
+        ```mermaid
+        flowchart LR
+            IoT["Mock IoT Sensors<br/>(Temp, Hum, Vibration)"] -->|Streaming Events| Kafka["Apache Kafka<br/>(Event Stream)"]
+            Kafka -->|Snowpipe Ingestion| Snowflake["Snowflake Warehouse<br/>(Raw IoT Telemetry)"]
+            Snowflake -->|ELT SQL Models| dbt["dbt Core<br/>(stg_telemetry + fct_spoilage_arbitrage)"]
+            dbt -->|Aggregated Data| Superset["AtmoSync BI Dashboard<br/>(Streamlit / Superset)"]
+            Superset -->|Alerts & Decisions| Trader["Infotact Commodities Trader<br/>(One-Click Rerouting)"]
+        ```
+        """, unsafe_allow_html=True)
+        st.write("• **Streaming Ingestion**: Continuous event stream generating sensor micro-climate packets.")
+        st.write("• **Cloud Warehouse (Snowflake)**: Scalable storage for time-series IoT event payloads.")
+        st.write("• **Data Transformation (dbt)**: `dbt/models/marts/fct_spoilage_arbitrage.sql` computing degradation curves and financial arbitrage in pure SQL.")
+        st.write("• **Decision Layer**: Alerts commodities traders to execute secondary market diversion before total quality loss.")
+
+    st.stop()
+
+# =============================================================================
+# ORIGINAL MACRO AGRO-CLIMATIC SUITABILITY DASHBOARD
+# =============================================================================
 available_files = {}
 if os.path.exists("data/raw/sample_SYNTHETIC.csv"):
     available_files["Sample Synthetic (India 2025 Multi-location)"] = "data/raw/sample_SYNTHETIC.csv"

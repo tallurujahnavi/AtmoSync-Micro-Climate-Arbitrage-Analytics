@@ -30,12 +30,18 @@ def test_demo_accounts_authentication():
     demo_users = get_demo_accounts()
     assert len(demo_users) >= 3
 
+    # Test login for Commodities Trader (Infotact Core Desk)
+    trader = demo_users["Commodities Trader (Infotact Core Desk)"]
+    t_ok, t_user, _ = authenticate_user(trader["email"], trader["password"])
+    assert t_ok is True
+    assert t_user["role"] == "Commodities Trader"
+
     # Test login for Jahnavi (Agronomist)
     agro = demo_users["Agronomist (Field Researcher)"]
     success, user_info, msg = authenticate_user(agro["email"], agro["password"])
     assert success is True
     assert user_info["role"] == "Agronomist"
-    assert user_info["name"] == "Jahnavi Talluru"
+    assert "Jahnavi" in user_info["name"]
 
     # Test login failure with wrong password
     bad_login, bad_info, bad_msg = authenticate_user(agro["email"], "wrong_password_xyz")
