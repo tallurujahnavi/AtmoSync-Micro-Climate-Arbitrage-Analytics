@@ -103,3 +103,27 @@ streamlit run app.py
    - Welch's two-sample t-test between location pairs ($H_2$).
    - Pearson correlation across environmental indicators ($H_3$).
 5. **Data Cleaning & Auditing**: IQR outlier clipping (3×IQR), per-location median fill, and schema verification.
+
+---
+
+
+## Project Workflow
+
+AtmoSync analyzes weather and micro-climate conditions to identify suitable agricultural growing locations.
+
+### Workflow Steps
+1. Load weather data from CSV files.
+2. Clean and validate the dataset.
+3. Analyze climate parameters using the source modules.
+4. Calculate crop suitability scores.
+5. Explore analytical results through the Streamlit application.
+
+### Project Structure
+- `data/raw/` – Raw weather datasets.
+- `src/` – Data loading and analytical modules.
+- `tests/` – Unit tests for project functionality.
+- `reports/` – Generated data documentation and reports.
+- `app.py` – Application entry point.
+
+### Data Analysis Objective
+The project evaluates climate conditions across locations to identify potential agricultural suitability based on relevant weather indicators.
