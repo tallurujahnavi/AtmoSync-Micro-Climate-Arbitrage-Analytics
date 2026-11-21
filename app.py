@@ -27,6 +27,11 @@ from auth import (
 from iot_simulator import generate_fleet_telemetry, COMMODITY_SPECS
 from spoilage_arbitrage import compute_fleet_arbitrage_summary, evaluate_container_arbitrage
 from kafka_pipeline import run_pipeline_benchmark
+from economics import (
+    calculate_crop_economic_arbitrage,
+    compute_location_economic_rankings,
+    CROP_ECONOMIC_BENCHMARKS,
+)
 
 st.set_page_config(page_title="AtmoSync: Micro-Climate Arbitrage", page_icon="🌾", layout="wide")
 
@@ -432,7 +437,7 @@ elif user_role == "Farm Manager":
 elif user_role == "Supply Chain Analyst":
     st.info("🚚 **Supply Chain View Active**: Evaluating inter-district distance radii (Haversine) and procurement arbitrage to minimize haulage costs and harvest risks.")
 
-tabs = st.tabs(["📊 Overview", "🗺️ Map", "🔁 Arbitrage Finder", "📈 Trends", "🌦️ Seasons", "🧪 Statistics", "🧹 Data Quality"])
+tabs = st.tabs(["📊 Overview", "🗺️ Map", "🔁 Arbitrage Finder", "💰 Financial ROI & Yield", "📈 Trends", "🌦️ Seasons", "🧪 Statistics", "🧹 Data Quality"])
 
 # ---------------- Overview ----------------
 with tabs[0]:
@@ -490,8 +495,58 @@ with tabs[2]:
                                color_continuous_scale="RdYlGn", color_continuous_midpoint=0,
                                title="CSI gain vs your location"), width="stretch")
 
-# ---------------- Trends ----------------
+# ---------------- Financial ROI & Yield ----------------
 with tabs[3]:
+    st.subheader("💰 Economic Arbitrage & Yield ROI Calculator")
+    st.caption("Translating Crop Suitability Index (CSI) differentials into concrete agricultural revenue, input cost savings, and transportation breakeven limits.")
+
+    col_e1, col_e2, col_e3 = st.columns(3)
+    with col_e1:
+        base_loc_sel = st.selectbox("Your Base Cultivation / Procurement Hub", sorted(loc.location_name), key="econ_base_loc")
+    with col_e2:
+        farm_size_input = st.slider("Farm Cultivation Scale (Hectares)", 1.0, 50.0, 5.0, 0.5)
+    with col_e3:
+        target_crop_bench = CROP_ECONOMIC_BENCHMARKS.get(crop, CROP_ECONOMIC_BENCHMARKS["Rice"])
+        st.metric(f"{crop} MSP / Mandi Benchmark", f"₹{target_crop_bench['msp_price_inr_per_q']:,.0f} / Quintal", delta=f"Base: {target_crop_bench['base_yield_q_per_ha']} q/ha")
+
+    # Ensure distance_km is populated relative to selected base location
+    base_r = loc[loc.location_name == base_loc_sel].iloc[0]
+    loc["distance_km"] = haversine(base_r.latitude, base_r.longitude, loc.latitude, loc.longitude).round(1)
+
+    econ_ranked = compute_location_economic_rankings(
+        loc_df=loc,
+        crop=crop,
+        base_loc_name=base_loc_sel,
+        farm_size_ha=farm_size_input
+    )
+
+    if not econ_ranked.empty:
+        best_econ = econ_ranked.iloc[0]
+        st.success(f"🏆 **Top Micro-Climate Arbitrage Option**: Cultivating in **{best_econ['location_name']}** ({best_econ['region']}) yields a net gain of **₹{best_econ['net_profit_inr']:,.2f}** for a {farm_size_input} ha farm!")
+
+        st.dataframe(
+            econ_ranked[["location_name", "region", "distance_km", "target_csi", "csi_gain", "yield_gain_q", "gross_revenue_inr", "haulage_cost_inr", "net_profit_inr", "breakeven_km"]].round(2),
+            use_container_width=True,
+            hide_index=True
+        )
+
+        st.plotly_chart(
+            px.bar(
+                econ_ranked.head(15),
+                x="location_name",
+                y="net_profit_inr",
+                color="net_profit_inr",
+                color_continuous_scale="RdYlGn",
+                color_continuous_midpoint=0,
+                title=f"Net Financial Arbitrage Profit (₹ INR) vs {base_loc_sel} for {crop}"
+            ),
+            use_container_width=True
+        )
+    else:
+        st.info("No comparative locations available.")
+
+# ---------------- Trends ----------------
+with tabs[4]:
     pick = st.multiselect("Compare locations", sorted(loc.location_name), default=list(loc.sort_values("csi", ascending=False).location_name[:3]))
     win = st.slider("Rolling window (days)", 1, 30, 7)
     t = d[d.location_name.isin(pick)].groupby(["date", "location_name"], as_index=False).csi.mean()
@@ -502,7 +557,7 @@ with tabs[3]:
     st.plotly_chart(px.line(v, x="date", y=var, color="location_name", title=var), width="stretch")
 
 # ---------------- Seasons ----------------
-with tabs[4]:
+with tabs[5]:
     s = d.groupby(["season", "region"], as_index=False).csi.mean()
     st.plotly_chart(px.bar(s, x="region", y="csi", color="season", barmode="group", title="CSI by Indian crop season and region"), width="stretch")
     mo = d.groupby(["month", "region"], as_index=False).csi.mean()
@@ -511,7 +566,7 @@ with tabs[4]:
     st.caption("Kharif = Jun-Oct, Rabi = Nov-Mar, Zaid = Apr-May. Seasons with few months of data are less reliable.")
 
 # ---------------- Statistics ----------------
-with tabs[5]:
+with tabs[6]:
     st.subheader("Correlation of weather variables")
     corr = d[list(COLS.values()) + ["pressure_mb", "wind_kph", "csi"]].corr() if {"pressure_mb", "wind_kph"} <= set(d.columns) else d[list(COLS.values()) + ["csi"]].corr()
     st.plotly_chart(px.imshow(corr.round(2), text_auto=True, color_continuous_scale="RdBu_r", zmin=-1, zmax=1), width="stretch")
@@ -546,7 +601,7 @@ with tabs[5]:
         st.info("Insufficient variation in humidity/CSI across the selected filtered records.")
 
 # ---------------- Data Quality ----------------
-with tabs[6]:
+with tabs[7]:
     st.write("Cleaning steps: drop duplicates, parse dates, median-fill missing per location, clip extreme outliers (3×IQR).")
     st.dataframe(pd.DataFrame(dq, index=["value"]).T, width="stretch")
     st.write("Data dictionary (columns used):")

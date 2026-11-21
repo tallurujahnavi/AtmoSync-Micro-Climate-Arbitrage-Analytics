@@ -103,13 +103,15 @@ atmosync-microclimate/
 │   ├── iot_simulator.py        # High-velocity container IoT sensor generator
 │   ├── spoilage_arbitrage.py   # Spoilage kinetics & Spoilage Arbitrage calculation
 │   ├── kafka_pipeline.py       # Apache Kafka streaming benchmark & consumer lag monitor
+│   ├── economics.py            # Economic ROI, yield gains, input savings & breakeven haulage
 │   ├── data_loader.py          # Data ingestion and inspection utilities
 │   └── arbitrage.py            # Regional agronomic suitability & Haversine metrics
 └── tests/
     ├── test_arbitrage.py           # Unit tests for agronomic formulas
     ├── test_auth.py                # Unit tests for authentication & RBAC
     ├── test_spoilage_arbitrage.py  # Unit tests for Spoilage Arbitrage calculations
-    └── test_kafka_pipeline.py      # Unit tests for Kafka streaming & consumer lag
+    ├── test_kafka_pipeline.py      # Unit tests for Kafka streaming & consumer lag
+    └── test_economics.py           # Unit tests for economic ROI & breakeven distance
 ```
 
 ---
@@ -141,6 +143,7 @@ python tests/test_arbitrage.py
 python tests/test_auth.py
 python tests/test_spoilage_arbitrage.py
 python tests/test_kafka_pipeline.py
+python tests/test_economics.py
 ```
 
 ### 3. Run Mid-Project Review Kafka Benchmark
