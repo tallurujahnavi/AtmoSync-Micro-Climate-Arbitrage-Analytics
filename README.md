@@ -78,6 +78,8 @@ atmosync-microclimate/
 ├── app.py                      # Interactive Commodities Trader & Arbitrage Portal
 ├── requirements.txt            # Python dependencies
 ├── README.md                   # Project documentation & Infotact specifications
+├── sql/
+│   └── snowflake_schema.sql    # Snowflake Cloud DWH DDL (Raw, Staging, Marts, RBAC)
 ├── dbt/
 │   ├── dbt_project.yml         # dbt project configuration
 │   └── models/
@@ -100,12 +102,14 @@ atmosync-microclimate/
 │   ├── auth.py                 # RBAC, SHA-256 session management & user credentials
 │   ├── iot_simulator.py        # High-velocity container IoT sensor generator
 │   ├── spoilage_arbitrage.py   # Spoilage kinetics & Spoilage Arbitrage calculation
+│   ├── kafka_pipeline.py       # Apache Kafka streaming benchmark & consumer lag monitor
 │   ├── data_loader.py          # Data ingestion and inspection utilities
 │   └── arbitrage.py            # Regional agronomic suitability & Haversine metrics
 └── tests/
     ├── test_arbitrage.py           # Unit tests for agronomic formulas
     ├── test_auth.py                # Unit tests for authentication & RBAC
-    └── test_spoilage_arbitrage.py  # Unit tests for Spoilage Arbitrage calculations
+    ├── test_spoilage_arbitrage.py  # Unit tests for Spoilage Arbitrage calculations
+    └── test_kafka_pipeline.py      # Unit tests for Kafka streaming & consumer lag
 ```
 
 ---
@@ -136,6 +140,12 @@ pip install -r requirements.txt
 python tests/test_arbitrage.py
 python tests/test_auth.py
 python tests/test_spoilage_arbitrage.py
+python tests/test_kafka_pipeline.py
+```
+
+### 3. Run Mid-Project Review Kafka Benchmark
+```powershell
+python src/kafka_pipeline.py
 ```
 
 ### 3. Launch Dashboard
