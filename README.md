@@ -103,3 +103,41 @@ streamlit run app.py
    - Welch's two-sample t-test between location pairs ($H_2$).
    - Pearson correlation across environmental indicators ($H_3$).
 5. **Data Cleaning & Auditing**: IQR outlier clipping (3×IQR), per-location median fill, and schema verification.
+
+## AtmoSync – Micro-Climate Arbitrage Analytics
+
+### Project Overview
+AtmoSync is a data analytics project focused on micro-climate analysis and arbitrage opportunities. It aims to analyze climate-related data and identify meaningful patterns that can support data-driven insights and decision-making.
+
+### Key Features
+- Climate data analysis and exploration.
+- Data preprocessing and cleaning.
+- Exploratory Data Analysis (EDA).
+- Micro-climate pattern analysis.
+- Analytical insights related to arbitrage opportunities.
+- Modular project structure for easy development and testing.
+
+### Technologies Used
+- Python
+- Pandas
+- NumPy
+- Data Visualization Libraries
+- Jupyter Notebook
+- Git and GitHub
+
+### Project Structure
+- `data/` – Dataset storage.
+- `notebooks/` – Data analysis notebooks.
+- `reports/` – Analysis reports.
+- `src/` – Source code.
+- `tests/` – Unit testing files.
+- `app.py` – Application entry point.
+
+### My Contributions
+- Working on the project using a separate GitHub branch.
+- Contributing to project development and data analytics.
+- Improving documentation and maintaining project code.
+- Supporting testing and analysis activities.
+
+### Project Objective
+To develop an analytical solution that explores micro-climate data and provides useful insights for understanding potential arbitrage opportunities.
