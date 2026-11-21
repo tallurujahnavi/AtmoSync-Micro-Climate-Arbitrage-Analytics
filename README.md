@@ -5,7 +5,7 @@
 
 **AtmoSync** is an interactive, analytical platform designed to identify, quantify, and exploit micro-climatic growing condition differentials across agricultural zones. By evaluating atmospheric indicators against agronomic crop requirements, AtmoSync surfaces micro-climate "arbitrage" opportunities—neighboring locations offering significantly superior crop suitability without massive logistical displacement.
 
----
+--
 
 ## 📐 Mathematical Formulation
 
