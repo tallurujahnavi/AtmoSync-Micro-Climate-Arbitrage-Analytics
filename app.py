@@ -32,6 +32,12 @@ from economics import (
     compute_location_economic_rankings,
     CROP_ECONOMIC_BENCHMARKS,
 )
+from alerts import (
+    dispatch_arbitrage_alert,
+    get_alert_history,
+    format_slack_block_kit_payload,
+    format_email_alert_payload,
+)
 
 st.set_page_config(page_title="AtmoSync: Micro-Climate Arbitrage", page_icon="🌾", layout="wide")
 
@@ -229,11 +235,12 @@ if analytics_mode == "🚢 Cold Chain Spoilage Arbitrage (Infotact Core)":
     m3.metric("Fleet Cargo Value", f"${tot_cargo_val:,.0f}")
     m4.metric("Capturable Spoilage Arbitrage", f"${tot_arbitrage_gain:,.2f}", delta="Net Capital Saved", delta_color="normal")
 
-    t1, t2, t3, t4 = st.tabs([
+    t1, t2, t3, t4, t5 = st.tabs([
         "🚨 Live Fleet Telemetry & Arbitrage Desk",
         "🗺️ Geospatial Rerouting Map",
         "📈 Arrhenius Spoilage Kinetics",
-        "🏗️ Data Architecture (Kafka → Snowflake → dbt)"
+        "🏗️ Data Architecture (Kafka → Snowflake → dbt)",
+        "🔔 Automated Alerts & Webhooks (Slack/Email)"
     ])
 
     # --- TAB 1: FLEET MONITOR & TRADER ACTION ---
@@ -375,6 +382,53 @@ round(base_shelf_life_hours / greatest(1.0, spoilage_multiplier), 1) as hours_re
 
 -- Spoilage Arbitrage Financial Gain ($)
 greatest(0.0, round(secondary_net_revenue_usd - primary_realized_revenue_usd, 2)) as spoilage_arbitrage_gain_usd""", language="sql")
+
+    # --- TAB 5: AUTOMATED ALERTS & WEBHOOKS ---
+    with t5:
+        st.subheader("🔔 Automated Slack & Email Alert Notification Center")
+        st.caption("Official Infotact Week 4 Requirement: *'Set up automated Slack/Email alerts triggered by arbitrage opportunities.'*")
+
+        urgent_cands = fleet_df[fleet_df["action_decision"].str.contains("REROUTE")]
+        if not urgent_cands.empty:
+            alert_target = urgent_cands.iloc[0]
+            st.warning(f"⚠️ **Active Arbitrage Alert for {alert_target['container_id']} ({alert_target['commodity']})** - Potential Spoilage Arbitrage: **+${alert_target['spoilage_arbitrage_gain_usd']:,.2f} USD**")
+
+            col_a1, col_a2 = st.columns(2)
+            with col_a1:
+                if st.button("🚀 Dispatch Slack Channel Webhook Alert", type="primary", use_container_width=True):
+                    res = dispatch_arbitrage_alert(alert_target.to_dict(), alert_target.to_dict(), channel="slack")
+                    st.success(f"✅ Slack Alert Dispatched to `#commodities-arbitrage-alerts` (ID: {res['alert_id']})")
+                    st.balloons()
+
+            with col_a2:
+                if st.button("📧 Dispatch Executive Email Alert", use_container_width=True):
+                    res = dispatch_arbitrage_alert(alert_target.to_dict(), alert_target.to_dict(), channel="email")
+                    st.success(f"✅ Email Alert Delivered to `trader@infotact.in` (ID: {res['alert_id']})")
+
+            st.divider()
+            st.subheader("📱 Live Slack Block Kit Message Preview")
+            slack_preview = format_slack_block_kit_payload(alert_target.to_dict(), alert_target.to_dict())
+            st.json(slack_preview)
+        else:
+            st.success("No active critical drift alerts. Fleet is healthy.")
+
+        st.divider()
+        st.subheader("📋 Historical Notification Audit Log")
+        history = get_alert_history(limit=10)
+        if history:
+            history_rows = [{
+                "Alert ID": h["alert_id"],
+                "Timestamp": h["dispatched_at"],
+                "Container": h["container_id"],
+                "Commodity": h["commodity"],
+                "Arbitrage Gain ($)": f"${h['arbitrage_gain_usd']:,.2f}",
+                "Target Mandi": h["target_diversion"],
+                "Channels": ", ".join(h["channels"]),
+                "Status": h["status"]
+            } for h in history]
+            st.dataframe(pd.DataFrame(history_rows), use_container_width=True, hide_index=True)
+        else:
+            st.info("No alerts dispatched yet.")
 
     st.stop()
 

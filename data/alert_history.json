@@ -1,0 +1,172 @@
+[
+  {
+    "alert_id": "ALT-162765",
+    "container_id": "CONT-TEST-999",
+    "commodity": "Alphonso Mangoes",
+    "alert_level": "CRITICAL_SPOILAGE_RISK",
+    "arbitrage_gain_usd": 25500.0,
+    "target_diversion": "Nagpur Hub",
+    "dispatched_at": "2026-11-22 10:56:02",
+    "channels": [
+      "slack",
+      "email"
+    ],
+    "status": "DELIVERED_SUCCESSFULLY",
+    "slack_preview": {
+      "channel": "#commodities-arbitrage-alerts",
+      "username": "AtmoSync Cold-Chain Bot",
+      "icon_emoji": ":avocado:",
+      "blocks": [
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "\ud83d\udea8 CRITICAL ARBITRAGE TRIGGER: CONT-TEST-999 (Alphonso Mangoes)",
+            "emoji": true
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Container ID:*\n`CONT-TEST-999`"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Commodity:*\n*Alphonso Mangoes*"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Internal Temperature:*\n\u26a0\ufe0f `0.0\u00b0C` (Drift Detected)"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Relative Humidity:*\n`0.0%`"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Micro-Climate Transit Risk Analysis:*\n\u2022 *Remaining Shelf Life:* `0.0 hours`\n\u2022 *Transit to Primary Terminal:* `0.0 hours` \u2192 *WILL ARRIVE SPOILED!* (95% value loss)\n\u2022 *Recommended Diversion:* Reroute to *Nagpur Hub* (`0.0 hours` transit)\n\u2022 *Net Spoilage Arbitrage Capture:* `+$25,500.00 USD`"
+          }
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "\u26a1 Authorize Reroute to Nagpur Hub"
+              },
+              "style": "primary",
+              "value": "reroute_CONT-TEST-999"
+            },
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Acknowledge & Monitor"
+              },
+              "value": "ack_CONT-TEST-999"
+            }
+          ]
+        }
+      ]
+    },
+    "email_preview": {
+      "recipient": "trader@infotact.in",
+      "subject": "[URGENT ARBITRAGE ALERT] Reroute Order Recommended for CONT-TEST-999 (+$25,500.00)",
+      "body": "Dear Infotact Commodities Trader,\n\nAtmoSync has detected a critical micro-climate thermal excursion in reefer container CONT-TEST-999 carrying Alphonso Mangoes.\n\nKey Telemetry & Arbitrage Parameters:\n--------------------------------------------------------------------------------\n- Container ID:                 CONT-TEST-999\n- Commodity Cargo:              Alphonso Mangoes\n- Current Internal Temperature: 0.0 \u00b0C\n- Remaining Usable Shelf Life:  0.0 hours\n- Time to Primary Destination:  0.0 hours [TOTAL SPOILAGE RISK]\n- Time to Secondary Diversion:  0.0 hours (Nagpur Hub)\n--------------------------------------------------------------------------------\nFINANCIAL ARBITRAGE GAIN:       +$25,500.00 USD saved vs. terminal spoilage loss.\n\nAction Required:\nLog in to the AtmoSync Executive BI Portal (http://localhost:8501) and authorize the carrier diversion waypoint to Nagpur Hub.\n\nBest Regards,\nAtmoSync Cold-Chain Surveillance Network\nInfotact Solutions Global Logistics Desk",
+      "dispatched_at": "2026-11-22T10:56:02.765186"
+    }
+  },
+  {
+    "alert_id": "ALT-65299",
+    "container_id": "CONT-TEST-999",
+    "commodity": "Alphonso Mangoes",
+    "alert_level": "CRITICAL_SPOILAGE_RISK",
+    "arbitrage_gain_usd": 25500.0,
+    "target_diversion": "Nagpur Hub",
+    "dispatched_at": "2026-11-22 10:54:25",
+    "channels": [
+      "slack",
+      "email"
+    ],
+    "status": "DELIVERED_SUCCESSFULLY",
+    "slack_preview": {
+      "channel": "#commodities-arbitrage-alerts",
+      "username": "AtmoSync Cold-Chain Bot",
+      "icon_emoji": ":avocado:",
+      "blocks": [
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "\ud83d\udea8 CRITICAL ARBITRAGE TRIGGER: CONT-TEST-999 (Alphonso Mangoes)",
+            "emoji": true
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Container ID:*\n`CONT-TEST-999`"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Commodity:*\n*Alphonso Mangoes*"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Internal Temperature:*\n\u26a0\ufe0f `0.0\u00b0C` (Drift Detected)"
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Relative Humidity:*\n`0.0%`"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "*Micro-Climate Transit Risk Analysis:*\n\u2022 *Remaining Shelf Life:* `0.0 hours`\n\u2022 *Transit to Primary Terminal:* `0.0 hours` \u2192 *WILL ARRIVE SPOILED!* (95% value loss)\n\u2022 *Recommended Diversion:* Reroute to *Nagpur Hub* (`0.0 hours` transit)\n\u2022 *Net Spoilage Arbitrage Capture:* `+$25,500.00 USD`"
+          }
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "\u26a1 Authorize Reroute to Nagpur Hub"
+              },
+              "style": "primary",
+              "value": "reroute_CONT-TEST-999"
+            },
+            {
+              "type": "button",
+              "text": {
+                "type": "plain_text",
+                "text": "Acknowledge & Monitor"
+              },
+              "value": "ack_CONT-TEST-999"
+            }
+          ]
+        }
+      ]
+    },
+    "email_preview": {
+      "recipient": "trader@infotact.in",
+      "subject": "[URGENT ARBITRAGE ALERT] Reroute Order Recommended for CONT-TEST-999 (+$25,500.00)",
+      "body": "Dear Infotact Commodities Trader,\n\nAtmoSync has detected a critical micro-climate thermal excursion in reefer container CONT-TEST-999 carrying Alphonso Mangoes.\n\nKey Telemetry & Arbitrage Parameters:\n--------------------------------------------------------------------------------\n- Container ID:                 CONT-TEST-999\n- Commodity Cargo:              Alphonso Mangoes\n- Current Internal Temperature: 0.0 \u00b0C\n- Remaining Usable Shelf Life:  0.0 hours\n- Time to Primary Destination:  0.0 hours [TOTAL SPOILAGE RISK]\n- Time to Secondary Diversion:  0.0 hours (Nagpur Hub)\n--------------------------------------------------------------------------------\nFINANCIAL ARBITRAGE GAIN:       +$25,500.00 USD saved vs. terminal spoilage loss.\n\nAction Required:\nLog in to the AtmoSync Executive BI Portal (http://localhost:8501) and authorize the carrier diversion waypoint to Nagpur Hub.\n\nBest Regards,\nAtmoSync Cold-Chain Surveillance Network\nInfotact Solutions Global Logistics Desk",
+      "dispatched_at": "2026-11-22T10:54:25.299218"
+    }
+  }
+]

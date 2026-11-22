@@ -87,11 +87,13 @@ atmosync-microclimate/
 │       │   ├── stg_container_telemetry.sql   # JSON payload extraction & cleaning
 │       │   └── stg_commodity_pricing.sql     # Wholesale spot market pricing
 │       └── marts/
-│           └── fct_spoilage_arbitrage.sql    # Degradation curves & arbitrage in pure SQL
+│           ├── fct_spoilage_arbitrage.sql    # Degradation curves & arbitrage in pure SQL
+│           └── fct_spoilage_arbitrage_materialized.sql # Clustered materialized view (Week 4 DWH optimization)
 ├── data/
 │   ├── raw/                    # Raw datasets (Kaggle & synthetic time-series)
 │   ├── processed/              # Normalized datasets
-│   └── users.json              # Local persistent user datastore
+│   ├── users.json              # Local persistent user datastore
+│   └── alert_history.json      # Dispatched Slack & Email webhook audit log
 ├── notebooks/
 │   ├── 01_data_understanding.ipynb          # Phase 1: Ingestion & Profiling
 │   └── 02_exploratory_data_analysis.ipynb    # Phase 2: Agro-Climatic Profiling
@@ -103,6 +105,7 @@ atmosync-microclimate/
 │   ├── iot_simulator.py        # High-velocity container IoT sensor generator
 │   ├── spoilage_arbitrage.py   # Spoilage kinetics & Spoilage Arbitrage calculation
 │   ├── kafka_pipeline.py       # Apache Kafka streaming benchmark & consumer lag monitor
+│   ├── alerts.py               # Slack Block Kit & Email automated webhook alert dispatcher
 │   ├── economics.py            # Economic ROI, yield gains, input savings & breakeven haulage
 │   ├── data_loader.py          # Data ingestion and inspection utilities
 │   └── arbitrage.py            # Regional agronomic suitability & Haversine metrics
@@ -111,7 +114,8 @@ atmosync-microclimate/
     ├── test_auth.py                # Unit tests for authentication & RBAC
     ├── test_spoilage_arbitrage.py  # Unit tests for Spoilage Arbitrage calculations
     ├── test_kafka_pipeline.py      # Unit tests for Kafka streaming & consumer lag
-    └── test_economics.py           # Unit tests for economic ROI & breakeven distance
+    ├── test_economics.py           # Unit tests for economic ROI & breakeven distance
+    └── test_alerts.py              # Unit tests for Slack/Email alert dispatchers
 ```
 
 ---
@@ -144,6 +148,7 @@ python tests/test_auth.py
 python tests/test_spoilage_arbitrage.py
 python tests/test_kafka_pipeline.py
 python tests/test_economics.py
+python tests/test_alerts.py
 ```
 
 ### 3. Run Mid-Project Review Kafka Benchmark
