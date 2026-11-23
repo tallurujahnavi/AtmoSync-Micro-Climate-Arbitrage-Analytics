@@ -108,7 +108,12 @@ atmosync-microclimate/
 │   ├── alerts.py               # Slack Block Kit & Email automated webhook alert dispatcher
 │   ├── economics.py            # Economic ROI, yield gains, input savings & breakeven haulage
 │   ├── data_loader.py          # Data ingestion and inspection utilities
-│   └── arbitrage.py            # Regional agronomic suitability & Haversine metrics
+│   ├── arbitrage.py            # Regional agronomic suitability & Haversine metrics
+│   └── views/                  # Modular, concise UI dashboard components
+│       ├── __init__.py
+│       ├── auth_view.py        # Login, registration, and demo persona portal
+│       ├── cold_chain_view.py  # Spoilage Arbitrage trader desk & reroute map
+│       └── agro_view.py        # Crop suitability, regional ANOVA & financial ROI
 └── tests/
     ├── test_arbitrage.py           # Unit tests for agronomic formulas
     ├── test_auth.py                # Unit tests for authentication & RBAC
