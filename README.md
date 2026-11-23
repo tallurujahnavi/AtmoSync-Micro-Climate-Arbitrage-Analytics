@@ -144,8 +144,67 @@ To develop an analytical solution that explores micro-climate data and provides 
 
 ## Development Update
 
-### Data Analytics Improvements
-- Improved project documentation.
-- Organized project modules for better maintainability.
-- Reviewed the data analysis workflow.
-- Updated project development notes.
+git add README.md
+git commit -m "Document temperature and humidity analysis"
+git push origin bushra-dev
+## Week 2 – Temperature and Humidity Analysis
+
+### 1. Overview
+Temperature and Humidity Analysis is an important component of the AtmoSync – Micro-Climate Arbitrage Analytics project. It analyzes environmental conditions inside refrigerated shipping containers to understand climate variations and identify potentially unsafe storage conditions for agricultural commodities.
+
+### 2. Temperature Analysis
+The temperature analysis module examines temperature readings collected from refrigerated containers.
+
+**Key Activities:**
+- Calculate average temperature.
+- Identify minimum and maximum temperature readings.
+- Analyze temperature fluctuations.
+- Examine temperature trends over time.
+- Identify unusual temperature variations.
+- Generate temperature distribution reports.
+
+### 3. Humidity Analysis
+The humidity analysis module evaluates moisture conditions inside refrigerated containers.
+
+**Key Activities:**
+- Calculate average humidity.
+- Identify minimum and maximum humidity levels.
+- Analyze humidity fluctuations.
+- Examine humidity trends.
+- Identify unusual humidity readings.
+- Generate humidity analysis reports.
+
+### 4. Climate Data Visualization
+Data visualization helps understand the relationship between temperature and humidity.
+
+**Visualizations:**
+- Temperature Distribution Chart
+- Humidity Distribution Chart
+- Temperature vs. Humidity Scatter Plot
+- Climate Correlation Heatmap
+
+### 5. Technologies Used
+- Python – Core programming language.
+- Pandas – Data manipulation and analysis.
+- NumPy – Numerical computations.
+- Matplotlib – Data visualization.
+- Git and GitHub – Version control and project collaboration.
+
+### 6. Expected Outcomes
+- Better understanding of refrigerated-container environmental conditions.
+- Identification of unusual temperature and humidity variations.
+- Improved climate data interpretation.
+- Analytical reports for further spoilage prediction.
+- A foundation for commodity quality analysis and arbitrage calculations.
+
+### 7. Implementation Progress
+**Week:** 2 – Exploratory Data Analysis
+
+**Implementation Tasks:**
+1. Temperature data analysis.
+2. Humidity data analysis.
+3. Climate data visualization.
+4. Environmental pattern identification.
+5. Analytical report generation.
+
+**Next Phase:** Commodity-wise analysis and spoilage prediction.
