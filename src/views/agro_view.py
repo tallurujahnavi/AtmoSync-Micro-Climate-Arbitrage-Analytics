@@ -12,6 +12,7 @@ from scipy import stats
 
 from arbitrage import CROPS, COLS, SEASONS_MAPPING as SEASON, calculate_crop_suitability as suitability, haversine_distance as haversine
 from economics import calculate_crop_economic_arbitrage, compute_location_economic_rankings, CROP_ECONOMIC_BENCHMARKS
+from ml_forecaster import ClimateFeatures, train_models, run_scenario_forecast, bulk_forecast, WARMING_SCENARIOS, COMMODITIES as ML_COMMODITIES
 
 
 @st.cache_data(show_spinner="Loading and cleaning meteorological records...")
@@ -71,7 +72,7 @@ def render_agro_suitability_view():
     st.title("🌾 AtmoSync: Agro-Climatic Arbitrage Analytics")
     st.caption(f"Crop Suitability Index (CSI 0-100) for **{crop}** in **{country}**.")
 
-    tabs = st.tabs(["📊 Overview", "🗺️ Map", "🔁 Proximity Finder", "💰 Financial ROI", "📈 Trends", "🌦️ Seasons", "🧪 Statistics"])
+    tabs = st.tabs(["📊 Overview", "🗺️ Map", "🔁 Proximity Finder", "💰 Financial ROI", "📈 Trends", "🌦️ Seasons", "🧪 Statistics", "🤖 ML Forecast"])
 
     # 1. Overview
     with tabs[0]:
@@ -148,3 +149,58 @@ def render_agro_suitability_view():
         if len(groups) >= 2:
             f, p = stats.f_oneway(*groups)
             st.write(f"One-way ANOVA: F = **{f:.2f}**, p = **{p:.4g}** → " + ("Statistically significant regional variance." if p < 0.05 else "No significant regional variance."))
+
+    # 8. ML Forecast
+    with tabs[7]:
+        st.subheader("🤖 Climate-Aware ML Forecast (Random Forest)")
+        st.caption("Predict Cold-chain Suitability Index (CSI) across warming scenarios using a scikit-learn Random Forest model trained on synthetic IoT telemetry.")
+
+        ml_col1, ml_col2, ml_col3 = st.columns(3)
+        ml_commodity  = ml_col1.selectbox("Commodity", ML_COMMODITIES, key="ml_commodity")
+        ml_temp       = ml_col2.slider("Ambient Temp (°C)", 5.0, 50.0, 28.0, 0.5, key="ml_temp")
+        ml_humidity   = ml_col3.slider("Humidity (%)", 30, 100, 65, 1, key="ml_humidity")
+
+        ml_col4, ml_col5 = st.columns(2)
+        ml_transit    = ml_col4.slider("Transit Duration (hrs)", 2, 72, 24, 1, key="ml_transit")
+        ml_precool    = ml_col5.checkbox("Pre-cooling Applied?", value=True, key="ml_precool")
+
+        if st.button("🔮 Run Forecast", key="ml_run"):
+            with st.spinner("Training Random Forest models on synthetic telemetry..."):
+                _models, _reports = train_models()
+
+            features = ClimateFeatures(
+                ambient_temp=ml_temp,
+                humidity_pct=float(ml_humidity),
+                transit_hours=float(ml_transit),
+                precooling_done=ml_precool,
+            )
+            results = run_scenario_forecast(_models, ml_commodity, features)
+
+            # --- Scenario table ---
+            rows = [{
+                "Scenario": r.scenario,
+                "Warming (°C)": WARMING_SCENARIOS[r.scenario],
+                "Predicted CSI": r.predicted_csi,
+                "Yield Loss (%)": r.predicted_yield_loss_pct,
+                "Spoilage Risk": r.spoilage_risk,
+                "Recommendation": r.recommendation,
+            } for r in results]
+            st.dataframe(rows, use_container_width=True, hide_index=True)
+
+            # --- CSI bar chart across scenarios ---
+            import pandas as _pd
+            chart_df = _pd.DataFrame({"Scenario": [r.scenario for r in results], "CSI": [r.predicted_csi for r in results]})
+            st.plotly_chart(
+                px.bar(chart_df, x="Scenario", y="CSI", color="CSI",
+                       color_continuous_scale="RdYlGn", range_y=[0, 100],
+                       title=f"{ml_commodity} — Predicted CSI Across Warming Scenarios"),
+                use_container_width=True
+            )
+
+            # --- Model performance metrics ---
+            if _reports:
+                st.markdown("#### 📐 Model Performance (Test Split)")
+                rpt_rows = [{"Commodity": r.commodity, "MAE": r.mae, "R²": r.r2} for r in _reports]
+                st.dataframe(rpt_rows, use_container_width=True, hide_index=True)
+        else:
+            st.info("Configure parameters above and click **Run Forecast** to generate climate scenario predictions.")
