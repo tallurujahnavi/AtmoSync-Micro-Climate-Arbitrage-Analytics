@@ -14,6 +14,7 @@ from iot_simulator import generate_fleet_telemetry
 from spoilage_arbitrage import compute_fleet_arbitrage_summary
 from kafka_pipeline import run_pipeline_benchmark
 from alerts import dispatch_arbitrage_alert, get_alert_history, format_slack_block_kit_payload
+from reports import generate_fleet_csv, generate_audit_report
 
 
 def render_cold_chain_view():
@@ -43,12 +44,13 @@ def render_cold_chain_view():
     m3.metric("Fleet Cargo Value", f"${tot_val:,.0f}")
     m4.metric("Capturable Spoilage Arbitrage", f"${tot_gain:,.2f}", delta="Net Capital Saved", delta_color="normal")
 
-    t_desk, t_map, t_kin, t_dwh, t_alt = st.tabs([
+    t_desk, t_map, t_kin, t_dwh, t_alt, t_rpt = st.tabs([
         "🚨 Live Fleet Desk",
         "🗺️ Geospatial Diversion Map",
         "📈 Arrhenius Spoilage Kinetics",
         "🏗️ MDS Data Pipeline",
-        "🔔 Automated Webhooks"
+        "🔔 Automated Webhooks",
+        "📑 Compliance & Reports"
     ])
 
     # 1. Fleet Monitor & Reroute Action
@@ -149,3 +151,39 @@ def render_cold_chain_view():
         if history:
             st.subheader("Notification History")
             st.dataframe(pd.DataFrame(history)[["alert_id", "dispatched_at", "container_id", "commodity", "arbitrage_gain_usd", "target_diversion", "status"]], use_container_width=True, hide_index=True)
+
+    # 6. Compliance & Reports
+    with t_rpt:
+        st.subheader("📑 Cold-Chain Audit Reports & Data Export")
+        st.caption("Generate signed regulatory compliance summaries and raw CSV datasets for downstream commodities accounting.")
+
+        audit = generate_audit_report(fleet_df, auditor_name="AtmoSync Compliance Auditor")
+        fleet_csv = generate_fleet_csv(fleet_df)
+
+        rc1, rc2, rc3 = st.columns(3)
+        rc1.metric("Compliance Rate", f"{audit['compliance_rate_pct']}%")
+        rc2.metric("Audited Containers", audit["total_containers"])
+        rc3.metric("Arbitrage Value Logged", f"${audit['total_arbitrage_gain_usd']:,.2f}")
+
+        st.info(f"🔒 **SHA-256 Audit Signature**: `{audit['integrity_hash']}`")
+
+        d_col1, d_col2 = st.columns(2)
+        with d_col1:
+            st.download_button(
+                label="📥 Download Telemetry & Arbitrage CSV",
+                data=fleet_csv,
+                file_name=f"atmosync_fleet_telemetry_{audit['report_id']}.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        with d_col2:
+            st.download_button(
+                label="📜 Download Signed Markdown Audit Report",
+                data=audit["markdown_content"],
+                file_name=f"{audit['report_id']}_audit_summary.md",
+                mime="text/markdown",
+                use_container_width=True
+            )
+
+        with st.expander("👁️ Preview Formal Executive Audit Report"):
+            st.markdown(audit["markdown_content"])
