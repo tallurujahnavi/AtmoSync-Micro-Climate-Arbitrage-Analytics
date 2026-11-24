@@ -127,3 +127,13 @@ AtmoSync analyzes weather and micro-climate conditions to identify suitable agri
 
 ### Data Analysis Objective
 The project evaluates climate conditions across locations to identify potential agricultural suitability based on relevant weather indicators.
+
+---
+
+## Development Progress – November 24
+
+- Reviewed the AtmoSync project architecture and repository structure.
+- Examined the Crop Suitability Index (CSI) mathematical formulation and agronomic weighting parameters.
+- Reviewed the spatial arbitrage methodology using the Haversine distance formula.
+- Studied the analytical workflow involving data ingestion, cleaning, validation, and climate suitability analysis.
+- Reviewed the project testing, dataset organization, and Streamlit application setup.
