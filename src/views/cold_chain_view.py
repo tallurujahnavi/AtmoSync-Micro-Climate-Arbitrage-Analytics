@@ -15,6 +15,7 @@ from spoilage_arbitrage import compute_fleet_arbitrage_summary
 from kafka_pipeline import run_pipeline_benchmark
 from alerts import dispatch_arbitrage_alert, get_alert_history, format_slack_block_kit_payload
 from reports import generate_fleet_csv, generate_audit_report
+from esg_sustainability import compute_fleet_esg_summary, generate_esg_executive_report
 
 
 def render_cold_chain_view():
@@ -44,13 +45,14 @@ def render_cold_chain_view():
     m3.metric("Fleet Cargo Value", f"${tot_val:,.0f}")
     m4.metric("Capturable Spoilage Arbitrage", f"${tot_gain:,.2f}", delta="Net Capital Saved", delta_color="normal")
 
-    t_desk, t_map, t_kin, t_dwh, t_alt, t_rpt = st.tabs([
+    t_desk, t_map, t_kin, t_dwh, t_alt, t_rpt, t_esg = st.tabs([
         "🚨 Live Fleet Desk",
         "🗺️ Geospatial Diversion Map",
         "📈 Arrhenius Spoilage Kinetics",
         "🏗️ MDS Data Pipeline",
         "🔔 Automated Webhooks",
-        "📑 Compliance & Reports"
+        "📑 Compliance & Reports",
+        "🌿 ESG & Carbon"
     ])
 
     # 1. Fleet Monitor & Reroute Action
@@ -187,3 +189,58 @@ def render_cold_chain_view():
 
         with st.expander("👁️ Preview Formal Executive Audit Report"):
             st.markdown(audit["markdown_content"])
+
+    # 7. ESG & Carbon
+    with t_esg:
+        st.subheader("🌿 Cold-Chain Carbon Abatement & Food Loss Prevention")
+        st.caption("Quantifies Scope 3 transport emissions vs avoided landfill methane emissions via IPCC & EPA SmartWay emission factors.")
+
+        esg_summary = compute_fleet_esg_summary(fleet_df)
+
+        e1, e2, e3, e4 = st.columns(4)
+        e1.metric("Food Waste Diverted", f"{esg_summary.total_food_saved_tonnes:,.1f} t", delta="Landfill Avoidance")
+        e2.metric("Net Carbon Saved", f"{esg_summary.net_carbon_saved_co2e_tonnes:,.1f} t CO2e", delta=f"${esg_summary.total_carbon_credit_value_usd:,.2f} VCM Value")
+        e3.metric("Fleet ESG Score", f"{esg_summary.fleet_esg_score} / 100")
+        e4.metric("Sustainability Rating", esg_summary.esg_tier)
+
+        # Plotly Carbon Abatement vs Haulage Emissions
+        chart_data = pd.DataFrame({
+            "Category": ["Avoided Landfill Methane", "Reroute Haulage Fuel", "Net Carbon Saved"],
+            "Tonnes CO2e": [
+                esg_summary.total_avoided_methane_co2e_tonnes,
+                esg_summary.total_transit_emissions_co2e_tonnes,
+                esg_summary.net_carbon_saved_co2e_tonnes
+            ]
+        })
+        fig_esg = px.bar(
+            chart_data, x="Category", y="Tonnes CO2e", color="Category",
+            color_discrete_map={
+                "Avoided Landfill Methane": "#2ca02c",
+                "Reroute Haulage Fuel": "#d62728",
+                "Net Carbon Saved": "#1f77b4"
+            },
+            title="Fleet Net Carbon Abatement Profile (t CO2e)"
+        )
+        st.plotly_chart(fig_esg, use_container_width=True)
+
+        # Detailed container-level ESG table
+        esg_rows = [{
+            "Container": d.container_id,
+            "Commodity": d.commodity,
+            "Food Saved (kg)": d.food_saved_kg,
+            "Avoided Methane (kg CO2e)": d.avoided_methane_co2e_kg,
+            "Haulage Emissions (kg CO2e)": d.haulage_emissions_co2e_kg,
+            "Net CO2e Saved (kg)": d.net_carbon_saved_co2e_kg,
+            "Carbon Credit ($)": d.carbon_credit_value_usd,
+            "Rating": d.esg_compliance_rating
+        } for d in esg_summary.details]
+        st.dataframe(pd.DataFrame(esg_rows), use_container_width=True, hide_index=True)
+
+        esg_md = generate_esg_executive_report(esg_summary)
+        st.download_button(
+            label="📜 Download Formal ESG & Carbon Abatement Report",
+            data=esg_md,
+            file_name="atmosync_esg_carbon_audit.md",
+            mime="text/markdown",
+            use_container_width=True
+        )
