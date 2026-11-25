@@ -118,24 +118,58 @@ def band_score(x: np.ndarray, lo: float, hi: float, tol: float) -> np.ndarray:
 
 def calculate_crop_suitability(df: pd.DataFrame, crop: str) -> pd.Series:
     """
-    Calculates composite Crop Suitability Index (CSI) scaled from 0 to 100
-    for a given crop across all observations in df.
+    Calculates composite Crop Suitability Index (CSI) scaled from 0 to 100.
+    Validates input data and preserves missing observations.
     """
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Input must be a pandas DataFrame.")
+
+    if df.empty:
+        raise ValueError("Input DataFrame cannot be empty.")
+
     if crop not in CROPS:
-        raise ValueError(f"Crop '{crop}' not found in agronomic database. Available: {list(CROPS.keys())}")
+        raise ValueError(
+            f"Crop '{crop}' not found in agronomic database. "
+            f"Available: {list(CROPS.keys())}"
+        )
 
     crop_specs = CROPS[crop]
+
+    required_columns = [COLS[param] for param in crop_specs]
+
+    missing_columns = [
+        col for col in required_columns if col not in df.columns
+    ]
+
+    if missing_columns:
+        raise KeyError(
+            f"Required meteorological columns missing: {missing_columns}"
+        )
+
     composite_score = np.zeros(len(df), dtype=float)
+    valid_rows = np.ones(len(df), dtype=bool)
 
     for param, (lo, hi, tol) in crop_specs.items():
         col_name = COLS[param]
-        if col_name not in df.columns:
-            raise KeyError(f"Required meteorological column '{col_name}' missing from DataFrame.")
-        sub_score = band_score(df[col_name].values, lo, hi, tol)
-        composite_score += WEIGHTS[param] * sub_score
 
-    return pd.Series((composite_score * 100.0).round(2), index=df.index, name="csi")
+        values = pd.to_numeric(df[col_name], errors="coerce").to_numpy(
+            dtype=float
+        )
 
+        sub_score = band_score(values, lo, hi, tol)
+
+        valid_rows &= np.isfinite(values)
+        composite_score += WEIGHTS[param] * np.nan_to_num(
+            sub_score, nan=0.0
+        )
+
+    composite_score[~valid_rows] = np.nan
+
+    return pd.Series(
+        (composite_score * 100.0).round(2),
+        index=df.index,
+        name="csi"
+    )
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
