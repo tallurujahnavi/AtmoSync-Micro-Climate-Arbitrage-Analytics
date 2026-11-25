@@ -211,32 +211,95 @@ def find_microclimate_arbitrage(
     max_radius_km: float = 500.0
 ) -> Tuple[Optional[pd.Series], pd.DataFrame]:
     """
-    Computes micro-climate arbitrage opportunities relative to a focal origin location.
-
-    Returns:
-    - origin_summary: pd.Series of origin metrics
-    - candidate_df: Sorted DataFrame of nearby locations ranked by CSI gain
+    Finds nearby microclimate arbitrage opportunities.
+    Validates inputs and filters invalid geographic coordinates.
     """
+    if not isinstance(aggregated_loc_df, pd.DataFrame):
+        raise TypeError("Input must be a pandas DataFrame.")
+
+    if aggregated_loc_df.empty:
+        raise ValueError("Location DataFrame cannot be empty.")
+
+    if not np.isfinite(max_radius_km) or max_radius_km < 0:
+        raise ValueError("Radius must be a finite non-negative value.")
+
+    required_columns = [
+        "location_name", "latitude", "longitude",
+        "csi", "temp", "hum", "rain"
+    ]
+
+    missing_columns = [
+        col for col in required_columns
+        if col not in aggregated_loc_df.columns
+    ]
+
+    if missing_columns:
+        raise KeyError(f"Missing required columns: {missing_columns}")
+
     if origin_location not in aggregated_loc_df["location_name"].values:
-        raise ValueError(f"Origin location '{origin_location}' not present in dataset.")
+        raise ValueError(
+            f"Origin location '{origin_location}' not present in dataset."
+        )
 
-    origin_row = aggregated_loc_df[aggregated_loc_df["location_name"] == origin_location].iloc[0]
-    origin_lat, origin_lon = origin_row["latitude"], origin_row["longitude"]
+    origin_row = aggregated_loc_df[
+        aggregated_loc_df["location_name"] == origin_location
+    ].iloc[0]
 
-    candidates = aggregated_loc_df[aggregated_loc_df["location_name"] != origin_location].copy()
+    origin_lat = origin_row["latitude"]
+    origin_lon = origin_row["longitude"]
+
+    haversine_distance(origin_lat, origin_lon, origin_lat, origin_lon)
+
+    candidates = aggregated_loc_df[
+        aggregated_loc_df["location_name"] != origin_location
+    ].copy()
+
+    candidates["latitude"] = pd.to_numeric(
+        candidates["latitude"], errors="coerce"
+    )
+    candidates["longitude"] = pd.to_numeric(
+        candidates["longitude"], errors="coerce"
+    )
+
+    candidates = candidates.dropna(subset=["latitude", "longitude"])
+
+    candidates = candidates[
+        candidates["latitude"].between(-90, 90)
+        & candidates["longitude"].between(-180, 180)
+    ].copy()
 
     candidates["distance_km"] = [
-        round(haversine_distance(origin_lat, origin_lon, r.latitude, r.longitude), 1)
+        round(
+            haversine_distance(
+                origin_lat, origin_lon, r.latitude, r.longitude
+            ), 1
+        )
         for _, r in candidates.iterrows()
     ]
 
-    in_radius = candidates[candidates["distance_km"] <= max_radius_km].copy()
-    in_radius["csi_gain"] = (in_radius["csi"] - origin_row["csi"]).round(2)
-    in_radius["temp_diff_c"] = (in_radius["temp"] - origin_row["temp"]).round(2)
-    in_radius["humidity_diff"] = (in_radius["hum"] - origin_row["hum"]).round(2)
-    in_radius["rain_diff_mm"] = (in_radius["rain"] - origin_row["rain"]).round(2)
+    in_radius = candidates[
+        candidates["distance_km"] <= max_radius_km
+    ].copy()
 
-    in_radius = in_radius.sort_values(by="csi_gain", ascending=False).reset_index(drop=True)
+    in_radius["csi_gain"] = (
+        in_radius["csi"] - origin_row["csi"]
+    ).round(2)
+
+    in_radius["temp_diff_c"] = (
+        in_radius["temp"] - origin_row["temp"]
+    ).round(2)
+
+    in_radius["humidity_diff"] = (
+        in_radius["hum"] - origin_row["hum"]
+    ).round(2)
+
+    in_radius["rain_diff_mm"] = (
+        in_radius["rain"] - origin_row["rain"]
+    ).round(2)
+
+    in_radius = in_radius.sort_values(
+        by="csi_gain", ascending=False
+    ).reset_index(drop=True)
 
     return origin_row, in_radius
 
