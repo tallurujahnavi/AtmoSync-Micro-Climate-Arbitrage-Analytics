@@ -303,44 +303,47 @@ def find_microclimate_arbitrage(
 
     return origin_row, in_radius
 
+def run_regional_anova(
+    df: pd.DataFrame, group_col: str = "region"
+) -> Dict[str, float]:
+    """
+    Performs one-way ANOVA on valid crop suitability scores.
+    Handles missing values and validates inputs.
+    """
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Input must be a pandas DataFrame.")
 
-def run_regional_anova(df: pd.DataFrame, group_col: str = "region") -> Dict[str, float]:
-    """
-    Performs one-way ANOVA test to evaluate if crop suitability significantly differs across regions.
-    """
-    groups = [group["csi"].values for _, group in df.groupby(group_col) if len(group) > 1]
+    if df.empty:
+        raise ValueError("Input DataFrame cannot be empty.")
+
+    if group_col not in df.columns:
+        raise KeyError(f"Grouping column '{group_col}' not found.")
+
+    if "csi" not in df.columns:
+        raise KeyError("Required column 'csi' not found.")
+
+    clean_df = df[[group_col, "csi"]].copy()
+    clean_df["csi"] = pd.to_numeric(
+        clean_df["csi"], errors="coerce"
+    )
+    clean_df = clean_df.dropna(subset=[group_col, "csi"])
+
+    groups = [
+        group["csi"].values
+        for _, group in clean_df.groupby(group_col)
+        if len(group) > 1
+    ]
 
     if len(groups) < 2:
         return {"f_stat": 0.0, "p_val": 1.0, "significant": False}
 
     f_stat, p_val = stats.f_oneway(*groups)
 
+    if not np.isfinite(f_stat) or not np.isfinite(p_val):
+        return {"f_stat": 0.0, "p_val": 1.0, "significant": False}
+
     return {
         "f_stat": float(round(f_stat, 3)),
         "p_val": float(round(p_val, 5)),
         "significant": bool(p_val < 0.05)
-    }
-
-
-def run_location_ttest(
-    df: pd.DataFrame,
-    loc_a: str,
-    loc_b: str
-) -> Dict[str, float]:
-    """
-    Performs Welch's two-sample t-test between two distinct locations.
-    """
-    xa = df[df["location_name"] == loc_a]["csi"].dropna()
-    xb = df[df["location_name"] == loc_b]["csi"].dropna()
-
-    if len(xa) < 2 or len(xb) < 2:
-        return {"t_stat": 0.0, "p_val": 1.0, "significant": False, "mean_diff": 0.0}
-
-    t_stat, p_val = stats.ttest_ind(xa, xb, equal_var=False)
-
-    return {
-        "t_stat": float(round(t_stat, 3)),
-        "p_val": float(round(p_val, 5)),
-        "significant": bool(p_val < 0.05),
-        "mean_diff": float(round(xa.mean() - xb.mean(), 2))
     }
