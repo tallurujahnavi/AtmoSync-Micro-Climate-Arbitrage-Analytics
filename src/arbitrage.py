@@ -88,14 +88,31 @@ SEASONS_MAPPING: Dict[int, str] = {
 
 def band_score(x: np.ndarray, lo: float, hi: float, tol: float) -> np.ndarray:
     """
-    Computes continuous agronomic suitability score:
-    - Returns 1.0 inside ideal range [lo, hi].
-    - Decays linearly to 0 outside the band up to [lo - tol] or [hi + tol].
-    - Returns 0.0 beyond tolerance.
+    Computes continuous agronomic suitability score.
+    Validates agronomic ranges and handles missing observations.
     """
+    if not np.isfinite(lo) or not np.isfinite(hi) or not np.isfinite(tol):
+        raise ValueError("Crop range values must be finite.")
+
+    if lo > hi:
+        raise ValueError("Lower ideal range cannot exceed upper range.")
+
+    if tol <= 0:
+        raise ValueError("Tolerance must be greater than zero.")
+
     x_arr = np.asarray(x, dtype=float)
-    dist = np.where(x_arr < lo, lo - x_arr, np.where(x_arr > hi, x_arr - hi, 0.0))
+
+    dist = np.where(
+        x_arr < lo,
+        lo - x_arr,
+        np.where(x_arr > hi, x_arr - hi, 0.0)
+    )
+
     score = np.clip(1.0 - (dist / tol), 0.0, 1.0)
+
+    # Preserve missing meteorological observations
+    score = np.where(np.isnan(x_arr), np.nan, score)
+
     return score
 
 
