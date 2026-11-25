@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  atmosync-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: atmosync_analytics_app
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app/src
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_HEADLESS=true
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - atmosync-net
+
+networks:
+  atmosync-net:
+    driver: bridge
