@@ -1,3 +1,4 @@
+
 """
 AtmoSync: Micro-Climate Arbitrage Analytics
 Module: arbitrage.py
@@ -55,10 +56,10 @@ CROPS: Dict[str, Dict[str, Tuple[float, float, float]]] = {
 
 # Agro-climatic weighting schema for Crop Suitability Index
 WEIGHTS: Dict[str, float] = {
-    "temp": 0.40,  # Temperature is primary driver of metabolic rate
-    "hum": 0.25,   # Relative humidity influences transpiration and fungal risk
-    "rain": 0.20,  # Precipitation determines immediate moisture balance
-    "uv": 0.15,    # Solar UV index correlates with photosynthetic radiation
+    "temp": 0.40,
+    "hum": 0.25,
+    "rain": 0.20,
+    "uv": 0.15,
 }
 
 COLS: Dict[str, str] = {
@@ -121,15 +122,36 @@ def calculate_crop_suitability(df: pd.DataFrame, crop: str) -> pd.Series:
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
-    Calculates great-circle distance between two geographic points on Earth in kilometers
-    using the Haversine formula.
+    Calculates great-circle distance between two geographic points in kilometers.
+    Validates coordinates and handles numerical rounding safely.
     """
+    coordinates = [lat1, lon1, lat2, lon2]
+
+    if not all(np.isfinite(value) for value in coordinates):
+        raise ValueError("Coordinates must be finite numeric values.")
+
+    if not (-90 <= lat1 <= 90 and -90 <= lat2 <= 90):
+        raise ValueError("Latitude must be between -90 and 90 degrees.")
+
+    if not (-180 <= lon1 <= 180 and -180 <= lon2 <= 180):
+        raise ValueError("Longitude must be between -180 and 180 degrees.")
+
     p = np.pi / 180.0
+
     dlat = (lat2 - lat1) * p
     dlon = (lon2 - lon1) * p
-    a = (np.sin(dlat / 2.0) ** 2) + np.cos(lat1 * p) * np.cos(lat2 * p) * (np.sin(dlon / 2.0) ** 2)
-    c = 2.0 * np.arcsin(np.sqrt(a))
-    return 6371.0 * c  # Earth mean radius in km
+
+    a = (
+        np.sin(dlat / 2.0) ** 2
+        + np.cos(lat1 * p) * np.cos(lat2 * p)
+        * np.sin(dlon / 2.0) ** 2
+    )
+
+    a = np.clip(a, 0.0, 1.0)
+
+    c = 2.0 * np.arctan2(np.sqrt(a), np.sqrt(1.0 - a))
+
+    return float(6371.0 * c)
 
 
 def find_microclimate_arbitrage(
@@ -139,7 +161,7 @@ def find_microclimate_arbitrage(
 ) -> Tuple[Optional[pd.Series], pd.DataFrame]:
     """
     Computes micro-climate arbitrage opportunities relative to a focal origin location.
-    
+
     Returns:
     - origin_summary: pd.Series of origin metrics
     - candidate_df: Sorted DataFrame of nearby locations ranked by CSI gain
@@ -151,6 +173,7 @@ def find_microclimate_arbitrage(
     origin_lat, origin_lon = origin_row["latitude"], origin_row["longitude"]
 
     candidates = aggregated_loc_df[aggregated_loc_df["location_name"] != origin_location].copy()
+
     candidates["distance_km"] = [
         round(haversine_distance(origin_lat, origin_lon, r.latitude, r.longitude), 1)
         for _, r in candidates.iterrows()
@@ -163,6 +186,7 @@ def find_microclimate_arbitrage(
     in_radius["rain_diff_mm"] = (in_radius["rain"] - origin_row["rain"]).round(2)
 
     in_radius = in_radius.sort_values(by="csi_gain", ascending=False).reset_index(drop=True)
+
     return origin_row, in_radius
 
 
@@ -171,10 +195,12 @@ def run_regional_anova(df: pd.DataFrame, group_col: str = "region") -> Dict[str,
     Performs one-way ANOVA test to evaluate if crop suitability significantly differs across regions.
     """
     groups = [group["csi"].values for _, group in df.groupby(group_col) if len(group) > 1]
+
     if len(groups) < 2:
         return {"f_stat": 0.0, "p_val": 1.0, "significant": False}
 
     f_stat, p_val = stats.f_oneway(*groups)
+
     return {
         "f_stat": float(round(f_stat, 3)),
         "p_val": float(round(p_val, 5)),
@@ -197,6 +223,7 @@ def run_location_ttest(
         return {"t_stat": 0.0, "p_val": 1.0, "significant": False, "mean_diff": 0.0}
 
     t_stat, p_val = stats.ttest_ind(xa, xb, equal_var=False)
+
     return {
         "t_stat": float(round(t_stat, 3)),
         "p_val": float(round(p_val, 5)),
