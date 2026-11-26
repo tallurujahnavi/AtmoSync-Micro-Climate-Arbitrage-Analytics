@@ -144,10 +144,7 @@ To develop an analytical solution that explores micro-climate data and provides 
 
 ## Development Update
 
-git add README.md
-git commit -m "Document temperature and humidity analysis"
-git push origin bushra-dev
-## Week 2 – Temperature and Humidity Analysis
+### Week 2 – Temperature and Humidity Analysis
 
 ### 1. Overview
 Temperature and Humidity Analysis is an important component of the AtmoSync – Micro-Climate Arbitrage Analytics project. It analyzes environmental conditions inside refrigerated shipping containers to understand climate variations and identify potentially unsafe storage conditions for agricultural commodities.
@@ -198,13 +195,29 @@ Data visualization helps understand the relationship between temperature and hum
 - A foundation for commodity quality analysis and arbitrage calculations.
 
 ### 7. Implementation Progress
-**Week:** 2 – Exploratory Data Analysis
+**Week:** 2 – Exploratory Data Analysis & Telemetry Profiling
 
 **Implementation Tasks:**
-1. Temperature data analysis.
-2. Humidity data analysis.
-3. Climate data visualization.
-4. Environmental pattern identification.
-5. Analytical report generation.
+1. Temperature data analysis (`src/climate_telemetry.py`).
+2. Humidity data analysis and correlation profiling (`src/climate_telemetry.py`).
+3. Z-score anomaly detection & commodity safe-band excursion alerts.
+4. Automated unit test coverage (`tests/test_climate_telemetry.py`).
 
-**Next Phase:** Commodity-wise analysis and spoilage prediction.
+### 8. Week 2–4 Development Plan (Daily Milestones)
+- **Week 2 (ELT, Telemetry Validation & Baseline Charts):**
+  - Container temperature & humidity telemetry analyzer (`src/climate_telemetry.py`)
+  - Python IoT container simulator & streaming JSON payloads (`src/iot_simulator.py`)
+  - Snowflake DDL & commodity pricing reference tables (`sql/snowflake_schema.sql`)
+  - dbt Core staging models & mid-project pipeline validation (`dbt/models/staging/`)
+  - Baseline container route & temperature fluctuation charts (`app.py`)
+- **Week 3 (Spoilage Arbitrage Engine & Interactive Reroute UI):**
+  - $Q_{10}$ thermal respiration spoilage kinetics (`src/spoilage_engine.py`)
+  - Distance-to-market vs. time-to-spoilage reroute optimizer (`src/reroute_optimizer.py`)
+  - dbt Spoilage Arbitrage fact marts (`dbt/models/marts/fct_spoilage_arbitrage.sql`)
+  - Kafka streaming throughput & consumer lag checks (`src/kafka_stream.py`)
+  - Core At-Risk Container & Arbitrage UI dashboard
+- **Week 4 (Automation, Optimization, Alerts & Final Deliverables):**
+  - Clustered materialized views & Snowflake query optimization
+  - Automated Slack/Email webhook arbitrage alerts
+  - Orchestration & pipeline healthcheck scripts
+  - Compliance export, model evaluation results, final project report & PPT outline
