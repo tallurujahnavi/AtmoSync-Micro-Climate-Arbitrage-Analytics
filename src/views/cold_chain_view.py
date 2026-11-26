@@ -16,6 +16,7 @@ from kafka_pipeline import run_pipeline_benchmark
 from alerts import dispatch_arbitrage_alert, get_alert_history, format_slack_block_kit_payload
 from reports import generate_fleet_csv, generate_audit_report
 from esg_sustainability import compute_fleet_esg_summary, generate_esg_executive_report
+from sensor_calibration import calibrate_fleet_telemetry
 
 
 def render_cold_chain_view():
@@ -45,14 +46,15 @@ def render_cold_chain_view():
     m3.metric("Fleet Cargo Value", f"${tot_val:,.0f}")
     m4.metric("Capturable Spoilage Arbitrage", f"${tot_gain:,.2f}", delta="Net Capital Saved", delta_color="normal")
 
-    t_desk, t_map, t_kin, t_dwh, t_alt, t_rpt, t_esg = st.tabs([
+    t_desk, t_map, t_kin, t_dwh, t_alt, t_rpt, t_esg, t_cal = st.tabs([
         "🚨 Live Fleet Desk",
         "🗺️ Geospatial Diversion Map",
         "📈 Arrhenius Spoilage Kinetics",
         "🏗️ MDS Data Pipeline",
         "🔔 Automated Webhooks",
         "📑 Compliance & Reports",
-        "🌿 ESG & Carbon"
+        "🌿 ESG & Carbon",
+        "🔧 Sensor Calibration"
     ])
 
     # 1. Fleet Monitor & Reroute Action
@@ -244,3 +246,39 @@ def render_cold_chain_view():
             mime="text/markdown",
             use_container_width=True
         )
+
+    # 8. Sensor Calibration
+    with t_cal:
+        st.subheader("🔧 IoT Sensor Drift & Telemetry Noise Calibration")
+        st.caption("Filters road vibration jitter (>1.2g) and compensates for thermocouple baseline drift to eliminate false spoilage diversion alarms.")
+
+        calibrated_df, audit_metrics = calibrate_fleet_telemetry(fleet_df)
+
+        sc1, sc2, sc3, sc4 = st.columns(4)
+        sc1.metric("Telemetry Confidence", f"{audit_metrics['mean_confidence_score'] * 100:.0f}%", delta="Fleet Signal Health")
+        sc2.metric("Vibration Jitter Damped", audit_metrics["vibration_damped_count"], delta="Mechanical Noise Filtered")
+        sc3.metric("Sensor Drift Compensated", audit_metrics["drift_detected_count"], delta="Thermocouple Baseline Aligned")
+        sc4.metric("False Positives Prevented", audit_metrics["false_positives_prevented"], delta="Unnecessary Diversions Averted", delta_color="normal")
+
+        # Visual comparison between Raw and Calibrated Temperatures
+        fig_cal = px.bar(
+            calibrated_df,
+            x="container_id",
+            y=["internal_temp_celsius", "calibrated_temp_celsius"],
+            barmode="group",
+            title="Raw Sensor Temperature vs Calibrated Signal (°C)",
+            labels={"value": "Temperature (°C)", "variable": "Signal Type"},
+            color_discrete_map={
+                "internal_temp_celsius": "#ff7f0e",
+                "calibrated_temp_celsius": "#2ca02c"
+            }
+        )
+        st.plotly_chart(fig_cal, use_container_width=True)
+
+        st.markdown("#### 📡 Real-Time Telemetry Calibration Audit")
+        display_cal_cols = [
+            "container_id", "commodity", "internal_temp_celsius", "calibrated_temp_celsius",
+            "vibration_g", "vibration_damped", "drift_detected", "sensor_health", "telemetry_confidence"
+        ]
+        available_cal_cols = [c for c in display_cal_cols if c in calibrated_df.columns]
+        st.dataframe(calibrated_df[available_cal_cols].round(2), use_container_width=True, hide_index=True)

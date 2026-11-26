@@ -42,6 +42,7 @@ def check_module_imports() -> dict:
         "ml_forecaster",
         "reports",
         "esg_sustainability",
+        "sensor_calibration",
     ]
     results = {}
     for mod in modules:
