@@ -87,44 +87,62 @@ def load_dataset(file_path: Optional[str] = None) -> Tuple[pd.DataFrame, bool]:
 
 def inspect_dataset_structure(df: pd.DataFrame) -> Dict:
     """
-    Performs Phase 1 Task 2 structural inspection of the dataset.
-    Extracts: shape, column count, dtypes, date range, location count, and country list.
+    Performs structural inspection of the dataset.
+    Extracts shape, column count, dtypes, date range,
+    location count, and country list.
     """
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Input must be a pandas DataFrame.")
+
+    if df.empty:
+        raise ValueError("Dataset is empty. Cannot inspect structure.")
+
     inspection = {}
     inspection["rows"], inspection["columns"] = df.shape
 
-    # Identify date column
-    date_cols = [c for c in ["last_updated", "date", "last_updated_epoch"] if c in df.columns]
+    date_cols = [
+        c for c in ["last_updated", "date", "last_updated_epoch"]
+        if c in df.columns
+    ]
+
     if "last_updated" in df.columns:
-        # Temporary parse to inspect date range without altering original df
-        parsed_dates = pd.to_datetime(df["last_updated"], errors="coerce")
-        inspection["date_min"] = str(parsed_dates.min())
-        inspection["date_max"] = str(parsed_dates.max())
-        inspection["total_days"] = (parsed_dates.max() - parsed_dates.min()).days
+        parsed_dates = pd.to_datetime(
+            df["last_updated"], errors="coerce"
+        )
+    elif "date" in df.columns:
+        parsed_dates = pd.to_datetime(
+            df["date"], errors="coerce"
+        )
+    elif "last_updated_epoch" in df.columns:
+        parsed_dates = pd.to_datetime(
+            df["last_updated_epoch"], unit="s", errors="coerce"
+        )
     else:
-        inspection["date_min"] = "N/A"
-        inspection["date_max"] = "N/A"
-        inspection["total_days"] = 0
+        parsed_dates = pd.Series(dtype="datetime64[ns]")
 
-    # Locations and geography
-    if "location_name" in df.columns:
-        inspection["unique_locations"] = int(df["location_name"].nunique())
-        inspection["location_samples"] = df["location_name"].unique()[:10].tolist()
-    else:
-        inspection["unique_locations"] = 0
-        inspection["location_samples"] = []
+    valid_dates = parsed_dates.dropna()
 
-    if "country" in df.columns:
-        inspection["countries"] = df["country"].unique().tolist()
-        inspection["is_india_present"] = "India" in df["country"].values
-        inspection["india_rows"] = int((df["country"] == "India").sum()) if inspection["is_india_present"] else 0
-    else:
-        inspection["countries"] = []
-        inspection["is_india_present"] = False
-        inspection["india_rows"] = 0
+    inspection["date_range"] = (
+        (str(valid_dates.min()), str(valid_dates.max()))
+        if not valid_dates.empty
+        else ("Unavailable", "Unavailable")
+    )
 
-    inspection["missing_cells_total"] = int(df.isna().sum().sum())
-    inspection["duplicate_rows_total"] = int(df.duplicated().sum())
+    inspection["locations"] = (
+        int(df["location_name"].nunique())
+        if "location_name" in df.columns
+        else 0
+    )
+
+    inspection["countries"] = (
+        sorted(df["country"].dropna().unique().tolist())
+        if "country" in df.columns
+        else []
+    )
+
+    inspection["missing_values"] = int(df.isna().sum().sum())
+    inspection["duplicate_rows"] = int(df.duplicated().sum())
+    inspection["date_columns_found"] = date_cols
 
     return inspection
 
