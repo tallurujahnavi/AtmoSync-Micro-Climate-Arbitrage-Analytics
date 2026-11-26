@@ -45,6 +45,7 @@ def check_module_imports() -> dict:
         "sensor_calibration",
         "profiler",
         "websocket_gateway",
+        "audit_logger",
     ]
     results = {}
     for mod in modules:
