@@ -69,19 +69,39 @@ def find_dataset_path(preferred_path: str = "data/raw/GlobalWeatherRepository.cs
 
 def load_dataset(file_path: Optional[str] = None) -> Tuple[pd.DataFrame, bool]:
     """
-    Loads raw CSV dataset into a pandas DataFrame.
+    Loads raw CSV dataset into a pandas DataFrame with validation.
     """
     if file_path is None:
         path, is_synthetic = find_dataset_path()
     else:
-        path = file_path
+        path = str(file_path)
         is_synthetic = "SYNTHETIC" in os.path.basename(path).upper()
 
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Dataset file not found: {path}")
+
+    if not path.lower().endswith(".csv"):
+        raise ValueError("Only CSV dataset files are supported.")
+
+    if os.path.getsize(path) == 0:
+        raise ValueError("Dataset file is empty.")
+
     print(f"[AtmoSync Data Loader] Loading data from: {path}")
+
     if is_synthetic:
-        print("[WARNING] Active dataset is SYNTHETIC test data. Place the real Kaggle CSV in 'data/raw/' for final grading.")
+        print(
+            "[WARNING] Active dataset is SYNTHETIC test data. "
+            "Place the real Kaggle CSV in 'data/raw/' for final grading."
+        )
 
     df = pd.read_csv(path)
+
+    if df.empty:
+        raise ValueError("CSV file contains no data rows.")
+
+    if len(df.columns) == 0:
+        raise ValueError("CSV file contains no columns.")
+
     return df, is_synthetic
 
 
