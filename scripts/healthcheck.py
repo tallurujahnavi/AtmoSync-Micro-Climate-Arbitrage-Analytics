@@ -43,6 +43,7 @@ def check_module_imports() -> dict:
         "reports",
         "esg_sustainability",
         "sensor_calibration",
+        "profiler",
     ]
     results = {}
     for mod in modules:
