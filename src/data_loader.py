@@ -133,16 +133,31 @@ def generate_data_dictionary(df: pd.DataFrame) -> pd.DataFrame:
     """
     Constructs a professional Data Dictionary Table for documentation and deliverables.
     """
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("Input must be a pandas DataFrame.")
+
+    if df.empty:
+        raise ValueError("Input dataset is empty.")
+
     records = []
+
     for col in df.columns:
         dtype = str(df[col].dtype)
         null_count = int(df[col].isna().sum())
         non_null_count = int(df[col].notna().sum())
         null_pct = round((null_count / len(df)) * 100, 2)
-        sample_val = str(df[col].dropna().iloc[0]) if non_null_count > 0 else "None"
 
-        # Lookup descriptions from master definition
-        meta = DATA_DICTIONARY_DEFINITIONS.get(col, (dtype, "Observed atmospheric/geographical feature", "Standard"))
+        sample_val = (
+            str(df[col].dropna().iloc[0])
+            if non_null_count > 0
+            else "None"
+        )
+
+        meta = DATA_DICTIONARY_DEFINITIONS.get(
+            col,
+            (dtype, "Observed atmospheric/geographical feature", "Standard")
+        )
+
         desc = meta[1]
         units = meta[2]
 
