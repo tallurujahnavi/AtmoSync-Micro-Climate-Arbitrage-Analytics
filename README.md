@@ -4,10 +4,11 @@
 > **Track:** Advanced Data Analytics & Engineering (Global Logistics & Commodities)  
 > **Project 1:** Real-World Applications – Hands-on System Building
 
-[![Python](https://img.shields.io/badge/Python-3.13-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![dbt Core](https://img.shields.io/badge/dbt-Core-orange.svg)](https://www.getdbt.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-red.svg)](https://streamlit.io/)
-[![Unit Tests](https://img.shields.io/badge/Unit%20Tests-Passing-brightgreen.svg)]()
+[![Unit Tests](https://img.shields.io/badge/Unit%20Tests-51%20Passing-brightgreen.svg)]()
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 
 ---
 
@@ -146,22 +147,28 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 2. Run All Unit Tests
+### 2. Pre-Flight Healthcheck
 ```powershell
-python tests/test_arbitrage.py
-python tests/test_auth.py
-python tests/test_spoilage_arbitrage.py
-python tests/test_kafka_pipeline.py
-python tests/test_economics.py
-python tests/test_alerts.py
+python scripts/healthcheck.py
 ```
 
-### 3. Run Mid-Project Review Kafka Benchmark
+### 3. Run All 51 Unit Tests
 ```powershell
-python src/kafka_pipeline.py
+python -m unittest discover -s tests -p "test_*.py"
 ```
 
-### 3. Launch Dashboard
+### 4. Run with Docker Compose
+```bash
+docker-compose up --build
+```
+
+### 5. Launch Dashboard
 ```powershell
 streamlit run app.py
 ```
+
+---
+
+## 📚 Technical Specifications & Benchmarks
+- [Final System Architecture & Flowchart](docs/FINAL_SYSTEM_ARCHITECTURE.md)
+- [Pipeline Performance & SLA Benchmarks](docs/BENCHMARK_RESULTS.md)
