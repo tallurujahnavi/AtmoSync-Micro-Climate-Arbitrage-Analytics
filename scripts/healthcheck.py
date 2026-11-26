@@ -47,6 +47,7 @@ def check_module_imports() -> dict:
         "websocket_gateway",
         "audit_logger",
         "geofencing",
+        "tax_fuel_optimizer",
     ]
     results = {}
     for mod in modules:
