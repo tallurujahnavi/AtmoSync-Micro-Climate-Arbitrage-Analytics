@@ -202,6 +202,7 @@ Data visualization helps understand the relationship between temperature and hum
 2. Humidity data analysis and correlation profiling (`src/climate_telemetry.py`).
 3. Z-score anomaly detection & commodity safe-band excursion alerts.
 4. Automated unit test coverage (`tests/test_climate_telemetry.py`).
+5. Python IoT container telemetry simulator with route GPS interpolation & fault injection (`src/iot_simulator.py`, `tests/test_iot_simulator.py`).
 
 ### 8. Week 2–4 Development Plan (Daily Milestones)
 - **Week 2 (ELT, Telemetry Validation & Baseline Charts):**
