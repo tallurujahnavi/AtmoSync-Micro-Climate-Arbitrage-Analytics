@@ -1,0 +1,36 @@
+version: 2
+
+sources:
+  - name: atmosync_raw
+    description: Raw IoT container telemetry streams and reference seeds landed in Snowflake RAW schema.
+    database: ATMOSYNC_DWH
+    schema: RAW
+    tables:
+      - name: container_telemetry_raw
+        description: Unaltered Kafka NDJSON events stored as Snowflake VARIANT payloads.
+        columns:
+          - name: ingest_id
+            tests:
+              - unique
+              - not_null
+          - name: raw_payload
+            tests:
+              - not_null
+
+      - name: commodity_pricing_raw
+        description: Primary and secondary market spot prices, Q10 factors, and haulage cost parameters.
+        columns:
+          - name: commodity
+            tests:
+              - not_null
+          - name: market_name
+            tests:
+              - not_null
+
+      - name: commodity_storage_profiles_raw
+        description: Ideal cold-chain temperature, humidity, and vibration thresholds per commodity.
+        columns:
+          - name: commodity
+            tests:
+              - unique
+              - not_null

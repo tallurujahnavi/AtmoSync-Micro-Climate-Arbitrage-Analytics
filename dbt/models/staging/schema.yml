@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: stg_container_telemetry
+    description: Cleaned and deduplicated container IoT sensor telemetry extracted from Snowflake VARIANT payloads.
+    columns:
+      - name: event_id
+        tests:
+          - unique
+          - not_null
+      - name: container_id
+        tests:
+          - not_null
+      - name: event_timestamp
+        tests:
+          - not_null
+      - name: compressor_status
+        tests:
+          - accepted_values:
+              values: ['OK', 'DEGRADED', 'FAULT']
+
+  - name: stg_commodity_pricing
+    description: Standardized wholesale commodity market spot pricing and Q10 spoilage parameters.
+    columns:
+      - name: commodity
+        tests:
+          - not_null
+      - name: market_name
+        tests:
+          - not_null
+      - name: market_tier
+        tests:
+          - accepted_values:
+              values: ['PRIMARY', 'SECONDARY']
+
+  - name: stg_telemetry_enriched
+    description: Enriched telemetry joining IoT readings with commodity safe storage bands and primary market pricing.
+    columns:
+      - name: event_id
+        tests:
+          - unique
+          - not_null
+      - name: is_temp_excursion
+        tests:
+          - not_null
+      - name: is_hum_excursion
+        tests:
+          - not_null
