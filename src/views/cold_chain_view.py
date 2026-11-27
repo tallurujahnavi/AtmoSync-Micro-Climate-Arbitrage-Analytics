@@ -17,6 +17,8 @@ from alerts import dispatch_arbitrage_alert, get_alert_history, format_slack_blo
 from reports import generate_fleet_csv, generate_audit_report
 from esg_sustainability import compute_fleet_esg_summary, generate_esg_executive_report
 from sensor_calibration import calibrate_fleet_telemetry
+from monte_carlo_risk import MonteCarloConfig, simulate_spoilage_var, simulate_fleet_var
+from iot_simulator import COMMODITY_SPECS
 
 
 def render_cold_chain_view():
@@ -46,7 +48,7 @@ def render_cold_chain_view():
     m3.metric("Fleet Cargo Value", f"${tot_val:,.0f}")
     m4.metric("Capturable Spoilage Arbitrage", f"${tot_gain:,.2f}", delta="Net Capital Saved", delta_color="normal")
 
-    t_desk, t_map, t_kin, t_dwh, t_alt, t_rpt, t_esg, t_cal = st.tabs([
+    t_desk, t_map, t_kin, t_dwh, t_alt, t_rpt, t_esg, t_cal, t_mc = st.tabs([
         "🚨 Live Fleet Desk",
         "🗺️ Geospatial Diversion Map",
         "📈 Arrhenius Spoilage Kinetics",
@@ -54,7 +56,8 @@ def render_cold_chain_view():
         "🔔 Automated Webhooks",
         "📑 Compliance & Reports",
         "🌿 ESG & Carbon",
-        "🔧 Sensor Calibration"
+        "🔧 Sensor Calibration",
+        "🎲 Monte Carlo VaR"
     ])
 
     # 1. Fleet Monitor & Reroute Action
@@ -282,3 +285,49 @@ def render_cold_chain_view():
         ]
         available_cal_cols = [c for c in display_cal_cols if c in calibrated_df.columns]
         st.dataframe(calibrated_df[available_cal_cols].round(2), use_container_width=True, hide_index=True)
+
+    # 9. Monte Carlo VaR
+    with t_mc:
+        st.subheader("🎲 Stochastic Monte Carlo Spoilage & Value-at-Risk (VaR)")
+        st.caption("Simulates 1,000 thermal excursions and heatwave shocks to quantify tail spoilage exposure (VaR 95% / CVaR) before dispatch.")
+
+        mc1, mc2, mc3, mc4 = st.columns(4)
+        mc_comm = mc1.selectbox("Commodity", list(COMMODITY_SPECS.keys()), key="mc_comm")
+        mc_val = mc2.number_input("Cargo Value ($ USD)", min_value=5000, max_value=250000, value=45000, step=5000, key="mc_val")
+        mc_hrs = mc3.slider("Primary Transit (hrs)", 12, 120, 48, 4, key="mc_hrs")
+        mc_heat = mc4.slider("Heatwave Shock Prob (%)", 0, 50, 12, 2, key="mc_heat") / 100.0
+
+        cfg = MonteCarloConfig(
+            commodity=mc_comm,
+            cargo_value_usd=float(mc_val),
+            transit_hours=float(mc_hrs),
+            ambient_mean_c=COMMODITY_SPECS[mc_comm]["ideal_temp_c"][1] + 2.5,
+            heatwave_prob=mc_heat,
+            n_simulations=1000,
+        )
+        mc_res = simulate_spoilage_var(cfg)
+
+        r1, r2, r3, r4 = st.columns(4)
+        r1.metric("Spoilage Probability", f"{mc_res.spoilage_probability_pct}%", delta=f"Risk Tier: {mc_res.risk_tier}")
+        r2.metric("Expected Spoilage Loss", f"${mc_res.expected_loss_usd:,.2f}")
+        r3.metric("Value-at-Risk (95% VaR)", f"${mc_res.var_95_usd:,.2f}", delta=f"99% VaR: ${mc_res.var_99_usd:,.0f}")
+        r4.metric("Expected Shortfall (CVaR)", f"${mc_res.cvar_95_usd:,.2f}", delta=f"Pre-cool: {mc_res.recommended_precool_hours} hrs")
+
+        fig_mc = px.histogram(
+            x=mc_res.simulated_losses_usd,
+            nbins=25,
+            title=f"Loss Distribution Across 1,000 Simulated Corridors ({mc_comm})",
+            labels={"x": "Simulated Spoilage Loss ($ USD)", "y": "Frequency"},
+            color_discrete_sequence=["#e15759"]
+        )
+        fig_mc.add_vline(x=mc_res.var_95_usd, line_dash="dash", line_color="black", annotation_text="95% VaR")
+        st.plotly_chart(fig_mc, use_container_width=True)
+
+        fleet_var = simulate_fleet_var(fleet_df, n_simulations=300)
+        st.markdown("#### 📦 Active Fleet Portfolio VaR Summary")
+        fv1, fv2, fv3 = st.columns(3)
+        fv1.metric("Portfolio Expected Loss", f"${fleet_var['portfolio_expected_loss_usd']:,.2f}")
+        fv2.metric("Portfolio 95% VaR", f"${fleet_var['portfolio_var_95_usd']:,.2f}")
+        fv3.metric("Highest Risk Container", fleet_var["highest_risk_container"] or "N/A")
+        if fleet_var["container_results"]:
+            st.dataframe(pd.DataFrame(fleet_var["container_results"]), use_container_width=True, hide_index=True)

@@ -49,6 +49,7 @@ def check_module_imports() -> dict:
         "geofencing",
         "tax_fuel_optimizer",
         "data_quality",
+        "monte_carlo_risk",
     ]
     results = {}
     for mod in modules:
