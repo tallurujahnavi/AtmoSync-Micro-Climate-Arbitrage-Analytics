@@ -145,7 +145,7 @@ with tabs[2]:
     me = a.selectbox("Your location", sorted(loc.location_name))
     radius = b.slider("Search radius (km)", 50, 1500, 500, 50)
     row = loc[loc.location_name == me].iloc[0]
-    loc["km"] = haversine(row.latitude, row.longitude, loc.latitude, loc.longitude).round(0)
+    loc["km"] = loc.apply(lambda r: haversine(row.latitude, row.longitude, r.latitude, r.longitude), axis=1).round(0)
     near = loc[(loc.location_name != me) & (loc.km <= radius)].copy()
     near["csi_gain"] = (near.csi - row.csi).round(2)
     near["temp_diff_C"] = (near.temp - row.temp).round(2)

@@ -171,11 +171,26 @@ def calculate_crop_suitability(df: pd.DataFrame, crop: str) -> pd.Series:
         name="csi"
     )
 
-def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+def haversine_distance(lat1, lon1, lat2, lon2) -> float:
     """
     Calculates great-circle distance between two geographic points in kilometers.
-    Validates coordinates and handles numerical rounding safely.
+    Handles scalar values and single-value Pandas Series safely.
     """
+
+    def convert_scalar(value):
+        arr = np.asarray(value)
+
+        if arr.size != 1:
+            raise ValueError(
+                "Each coordinate must contain exactly one value."
+            )
+
+        return float(arr.reshape(-1)[0])
+
+    lat1, lon1, lat2, lon2 = map(
+        convert_scalar, [lat1, lon1, lat2, lon2]
+    )
+
     coordinates = [lat1, lon1, lat2, lon2]
 
     if not all(np.isfinite(value) for value in coordinates):
