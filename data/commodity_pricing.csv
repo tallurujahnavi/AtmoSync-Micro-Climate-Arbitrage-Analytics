@@ -1,0 +1,16 @@
+commodity,market_name,market_tier,latitude,longitude,spot_price_usd_per_mt,secondary_price_factor,base_shelf_life_hours,q10_factor,humidity_sensitivity_alpha,haulage_cost_usd_per_mt_km,effective_date
+Avocado,Chennai Port,PRIMARY,13.0844,80.2899,2450.00,1.000,168.0,2.20,0.45,0.180,2026-11-27
+Avocado,Vellore Cold Hub,SECONDARY,12.9165,79.1325,2120.00,0.865,168.0,2.20,0.45,0.180,2026-11-27
+Avocado,Hosur Agri Terminal,SECONDARY,12.7409,77.8253,2050.00,0.837,168.0,2.20,0.45,0.180,2026-11-27
+Banana,JNPT Mumbai,PRIMARY,18.9498,72.9508,980.00,1.000,240.0,2.00,0.35,0.150,2026-11-27
+Banana,Pune Wholesale Yard,SECONDARY,18.5204,73.8567,860.00,0.878,240.0,2.00,0.35,0.150,2026-11-27
+Banana,Thane Distribution Hub,SECONDARY,19.2183,72.9781,890.00,0.908,240.0,2.00,0.35,0.150,2026-11-27
+Mango,Visakhapatnam Port,PRIMARY,17.6868,83.2185,1850.00,1.000,192.0,2.10,0.40,0.170,2026-11-27
+Mango,Vijayawada Mandi,SECONDARY,16.5062,80.6480,1590.00,0.859,192.0,2.10,0.40,0.170,2026-11-27
+Mango,Rajahmundry Cold Hub,SECONDARY,17.0005,81.8040,1625.00,0.878,192.0,2.10,0.40,0.170,2026-11-27
+Strawberry,Mundra Port,PRIMARY,22.8395,69.7213,4200.00,1.000,96.0,2.50,0.55,0.220,2026-11-27
+Strawberry,Ahmedabad Cold Market,SECONDARY,23.0225,72.5714,3650.00,0.869,96.0,2.50,0.55,0.220,2026-11-27
+Strawberry,Vadodara Agri Hub,SECONDARY,22.3072,73.1812,3580.00,0.852,96.0,2.50,0.55,0.220,2026-11-27
+Tomato,JNPT Mumbai,PRIMARY,18.9498,72.9508,760.00,1.000,144.0,2.15,0.40,0.145,2026-11-27
+Tomato,Nashik APMC Market,SECONDARY,19.9975,73.7898,660.00,0.868,144.0,2.15,0.40,0.145,2026-11-27
+Tomato,Kalyan Logistics Park,SECONDARY,19.2403,73.1305,685.00,0.901,144.0,2.15,0.40,0.145,2026-11-27
