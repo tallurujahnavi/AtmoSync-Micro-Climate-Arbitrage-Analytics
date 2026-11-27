@@ -269,3 +269,20 @@ The application processes climate data and evaluates crop suitability based on s
 ## 🎯 Project Goal
 
 AtmoSync aims to provide an analytical framework for exploring micro-climatic variations, comparing crop suitability across geographical locations, and identifying potential agricultural opportunities using climate data, spatial analysis, and statistical validation.
+
+## Dashboard Navigation
+
+The AtmoSync dashboard provides a vertically scrollable interface
+for exploring microclimate and agricultural arbitrage analytics.
+
+### Dashboard Sections
+- Overview
+- Interactive Map
+- Arbitrage Finder
+- Trends Analysis
+- Seasonal Analysis
+- Statistical Analysis
+- Data Quality
+
+Users can explore all analytics sections on a single page
+without switching between tabs.
