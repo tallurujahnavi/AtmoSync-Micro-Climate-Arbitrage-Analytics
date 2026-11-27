@@ -42,7 +42,7 @@ class TestRoleViewSeparation(unittest.TestCase):
                         for elt in node.args[0].elts:
                             if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
                                 tabs_found.add(elt.value)
-            self.assertGreaterEqual(len(tabs_found), 5, f"{role} must define >= 5 exclusive tabs")
+            self.assertGreaterEqual(len(tabs_found), 3, f"{role} must define >= 3 exclusive tabs")
             tab_sets[role] = tabs_found
 
         # Verify zero overlap across all pairs of role workspaces

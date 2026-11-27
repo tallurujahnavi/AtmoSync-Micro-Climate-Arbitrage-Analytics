@@ -1,8 +1,6 @@
 """
-AtmoSync: Micro-Climate Arbitrage Analytics
-Module: auth.py
-Description: Role-based user authentication and demo persona setup for
-             Commodities Trader, Agronomist, and Supply Chain Analyst.
+AtmoSync: User Authentication & Roles
+Handles login, registration, and demo accounts for the 3 main project roles.
 """
 
 import hashlib
@@ -14,10 +12,10 @@ from typing import Dict, Optional, Tuple
 USER_DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "users.json"
 
 ROLES = {
-    "Commodities Trader": "Monitors live container spoilage risk, market rerouting profit, and automated trade alerts.",
-    "Agronomist": "Analyzes regional weather data, Crop Suitability Index (0-100), farm ROI, and ML climate forecasts.",
-    "Supply Chain Analyst": "Tracks container GPS routes, IoT sensor health, Kafka-Snowflake-dbt pipeline, and reports.",
-    "Farm Manager": "Evaluates crop suitability rankings, seasonal Kharif/Rabi trends, and regional farm profits.",
+    "Commodities Trader": "Checks spoilage alerts, compares market prices, and approves container rerouting.",
+    "Agronomist": "Checks crop temperature/humidity limits, spoilage curves, and city weather suitability.",
+    "Supply Chain Analyst": "Tracks container routes on map, monitors sensor readings, and exports pipeline data.",
+    "Farm Manager": "Reviews crop suitability scores and seasonal weather charts.",
 }
 
 DEFAULT_USERS: Dict[str, Dict] = {
@@ -25,7 +23,7 @@ DEFAULT_USERS: Dict[str, Dict] = {
         "name": "Jahnavi Talluru",
         "email": "trader@infotact.in",
         "role": "Commodities Trader",
-        "organization": "Infotact Commodities Project",
+        "organization": "Infotact Project Team",
         # sha256 for "trader2026"
         "password_hash": "66a509d0c8f3e005466b9ee2b8d3a7bf9c3e6d53d4b1c1cbaf05b0bcbc066205",
     },
@@ -33,7 +31,7 @@ DEFAULT_USERS: Dict[str, Dict] = {
         "name": "Jahnavi Talluru",
         "email": "jahnavi@atmosync.org",
         "role": "Agronomist",
-        "organization": "B.Tech Agro-Climate Research",
+        "organization": "B.Tech Final Year Project",
         # sha256 for "agro2026"
         "password_hash": "077d1cf29426c4cda94f4134632c9d19533de0d870732519896f69ae9acdcb7f",
     },
@@ -41,7 +39,7 @@ DEFAULT_USERS: Dict[str, Dict] = {
         "name": "Anita Rao",
         "email": "anita@atmosync.org",
         "role": "Supply Chain Analyst",
-        "organization": "AtmoSync Logistics Team",
+        "organization": "B.Tech Final Year Project",
         # sha256 for "logistics2026"
         "password_hash": "b13a32fd08eb4736f6f42f3631ccf47f55f913b9a4ef4b4b1055f9706047fc7d",
     },
@@ -49,12 +47,11 @@ DEFAULT_USERS: Dict[str, Dict] = {
 
 
 def hash_password(password: str) -> str:
-    """Returns SHA-256 hexadecimal digest of input password."""
+    """Returns SHA-256 hash of password."""
     return hashlib.sha256(password.strip().encode("utf-8")).hexdigest()
 
 
 def _ensure_user_store() -> Dict[str, Dict]:
-    """Ensures user store JSON exists with default seeded accounts."""
     USER_DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
     if not USER_DATA_FILE.exists():
         with open(USER_DATA_FILE, "w", encoding="utf-8") as f:
@@ -73,17 +70,12 @@ def _ensure_user_store() -> Dict[str, Dict]:
 
 
 def _save_users(users: Dict[str, Dict]) -> None:
-    """Saves updated user dictionary to persistent JSON."""
     USER_DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(USER_DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(users, f, indent=2)
 
 
 def authenticate_user(email: str, password: str) -> Tuple[bool, Optional[Dict], str]:
-    """
-    Authenticates user credentials.
-    Returns: (is_success, user_dict, message)
-    """
     clean_email = email.strip().lower()
     users = _ensure_user_store()
 
@@ -91,14 +83,12 @@ def authenticate_user(email: str, password: str) -> Tuple[bool, Optional[Dict], 
         return False, None, "No account registered with this email address."
 
     user = users[clean_email]
-    hashed_input = hash_password(password)
-
-    if user["password_hash"] == hashed_input:
+    if user["password_hash"] == hash_password(password):
         user_info = {
             "name": user.get("name", "User"),
             "email": clean_email,
             "role": user.get("role", "Agronomist"),
-            "organization": user.get("organization", "AtmoSync Project"),
+            "organization": user.get("organization", "AtmoSync Team"),
         }
         return True, user_info, "Authentication successful."
 
@@ -110,19 +100,13 @@ def register_user(
     email: str,
     password: str,
     role: str = "Agronomist",
-    organization: str = "B.Tech Project Team"
+    organization: str = "B.Tech Project Team",
 ) -> Tuple[bool, str]:
-    """
-    Registers a new user account into the local datastore.
-    Returns: (is_success, message)
-    """
     clean_email = email.strip().lower()
     if not clean_email or "@" not in clean_email or "." not in clean_email:
         return False, "Please enter a valid email address."
-
     if len(password.strip()) < 4:
         return False, "Password must be at least 4 characters long."
-
     if not name.strip():
         return False, "Name cannot be empty."
 
@@ -143,24 +127,23 @@ def register_user(
 
 
 def get_demo_accounts() -> Dict[str, Dict]:
-    """Returns demo login profiles for evaluating each role workspace."""
     return {
         "Commodities Trader (Trading Desk)": {
             "email": "trader@infotact.in",
             "password": "trader2026",
             "role": "Commodities Trader",
-            "desc": "Live spoilage arbitrage tracking, shelf-life curve, market profit vs. transport cost, heatwave risk simulator, and Slack/Email alerts.",
+            "desc": "See at-risk containers, compare main vs. backup market profits, and send Slack/Email alerts.",
         },
         "Agronomist (Crop & Climate Lab)": {
             "email": "jahnavi@atmosync.org",
             "password": "agro2026",
             "role": "Agronomist",
-            "desc": "Crop Suitability Index (0-100), India map, nearby hub finder, farm profit estimate, seasonal trends, and ML weather predictor.",
+            "desc": "Check crop temperature & humidity limits, freshness drop curves, and city weather suitability maps.",
         },
         "Supply Chain Analyst (Ops & DataOps)": {
             "email": "anita@atmosync.org",
             "password": "logistics2026",
             "role": "Supply Chain Analyst",
-            "desc": "Container GPS route check, IoT sensor health, Kafka-Snowflake-dbt pipeline monitor, food waste saved, and CSV/report exports.",
+            "desc": "View container routes on map, monitor temp/humidity/vibration charts, and test data pipeline exports.",
         },
     }
