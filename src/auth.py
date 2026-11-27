@@ -1,43 +1,39 @@
 """
 AtmoSync: Micro-Climate Arbitrage Analytics
 Module: auth.py
-Description: Authentication, session management, and Role-Based Access Control (RBAC).
-             Supports persistent user registration, salted SHA-256 password hashing,
-             and predefined persona profiles for agronomists, farm managers, and supply chain analysts.
+Description: Role-based user authentication and demo persona setup for
+             Commodities Trader, Agronomist, and Supply Chain Analyst.
 """
 
 import hashlib
 import json
-import os
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 
 USER_DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "users.json"
 
-# Defined industry user personas for agro-climatic analytics
 ROLES = {
-    "Commodities Trader": "Infotact Desk: Real-time Spoilage Arbitrage tracking, container rerouting, and cargo value preservation.",
-    "Agronomist": "Focus on crop tolerance bands, climate stress thresholds, and biological suitability indices.",
-    "Supply Chain Analyst": "Focus on haversine transport radii, inter-district procurement gaps, and cold-chain logistics.",
-    "Farm Manager": "Focus on regional yield arbitrage, location rankings, and seasonal Kharif/Rabi scheduling.",
+    "Commodities Trader": "Monitors live container spoilage risk, market rerouting profit, and automated trade alerts.",
+    "Agronomist": "Analyzes regional weather data, Crop Suitability Index (0-100), farm ROI, and ML climate forecasts.",
+    "Supply Chain Analyst": "Tracks container GPS routes, IoT sensor health, Kafka-Snowflake-dbt pipeline, and reports.",
+    "Farm Manager": "Evaluates crop suitability rankings, seasonal Kharif/Rabi trends, and regional farm profits.",
 }
 
-# Default seeded credentials for immediate mentor/evaluator demo
 DEFAULT_USERS: Dict[str, Dict] = {
     "trader@infotact.in": {
         "name": "Jahnavi Talluru",
         "email": "trader@infotact.in",
         "role": "Commodities Trader",
-        "organization": "Infotact Global Commodities Desk",
+        "organization": "Infotact Commodities Project",
         # sha256 for "trader2026"
         "password_hash": "66a509d0c8f3e005466b9ee2b8d3a7bf9c3e6d53d4b1c1cbaf05b0bcbc066205",
     },
     "jahnavi@atmosync.org": {
-        "name": "Dr. Jahnavi Talluru",
+        "name": "Jahnavi Talluru",
         "email": "jahnavi@atmosync.org",
         "role": "Agronomist",
-        "organization": "Andhra Agricultural Research Consortium",
+        "organization": "B.Tech Agro-Climate Research",
         # sha256 for "agro2026"
         "password_hash": "077d1cf29426c4cda94f4134632c9d19533de0d870732519896f69ae9acdcb7f",
     },
@@ -45,7 +41,7 @@ DEFAULT_USERS: Dict[str, Dict] = {
         "name": "Anita Rao",
         "email": "anita@atmosync.org",
         "role": "Supply Chain Analyst",
-        "organization": "AgriLogistics India Network",
+        "organization": "AtmoSync Logistics Team",
         # sha256 for "logistics2026"
         "password_hash": "b13a32fd08eb4736f6f42f3631ccf47f55f913b9a4ef4b4b1055f9706047fc7d",
     },
@@ -68,7 +64,6 @@ def _ensure_user_store() -> Dict[str, Dict]:
     try:
         with open(USER_DATA_FILE, "r", encoding="utf-8") as f:
             users = json.load(f)
-            # Ensure default users remain present if corrupted
             for email, data in DEFAULT_USERS.items():
                 if email not in users:
                     users[email] = data
@@ -103,7 +98,7 @@ def authenticate_user(email: str, password: str) -> Tuple[bool, Optional[Dict], 
             "name": user.get("name", "User"),
             "email": clean_email,
             "role": user.get("role", "Agronomist"),
-            "organization": user.get("organization", "Independent"),
+            "organization": user.get("organization", "AtmoSync Project"),
         }
         return True, user_info, "Authentication successful."
 
@@ -115,7 +110,7 @@ def register_user(
     email: str,
     password: str,
     role: str = "Agronomist",
-    organization: str = "Agricultural Research"
+    organization: str = "B.Tech Project Team"
 ) -> Tuple[bool, str]:
     """
     Registers a new user account into the local datastore.
@@ -139,7 +134,7 @@ def register_user(
         "name": name.strip(),
         "email": clean_email,
         "role": role if role in ROLES else "Agronomist",
-        "organization": organization.strip() or "Independent Agri-Consultant",
+        "organization": organization.strip() or "AtmoSync Team",
         "password_hash": hash_password(password),
     }
 
@@ -148,24 +143,24 @@ def register_user(
 
 
 def get_demo_accounts() -> Dict[str, Dict]:
-    """Returns sample demo persona profiles for quick evaluation."""
+    """Returns demo login profiles for evaluating each role workspace."""
     return {
-        "Commodities Trader (Infotact Core Desk)": {
+        "Commodities Trader (Trading Desk)": {
             "email": "trader@infotact.in",
             "password": "trader2026",
             "role": "Commodities Trader",
-            "desc": "Official Infotact Desk: Real-time container telemetry, spoilage curves, and Spoilage Arbitrage rerouting.",
+            "desc": "Live spoilage arbitrage tracking, shelf-life curve, market profit vs. transport cost, heatwave risk simulator, and Slack/Email alerts.",
         },
-        "Agronomist (Field Researcher)": {
+        "Agronomist (Crop & Climate Lab)": {
             "email": "jahnavi@atmosync.org",
             "password": "agro2026",
             "role": "Agronomist",
-            "desc": "Access biochemical tolerance bands, climate stress curves, and crop suitability models.",
+            "desc": "Crop Suitability Index (0-100), India map, nearby hub finder, farm profit estimate, seasonal trends, and ML weather predictor.",
         },
-        "Supply Chain Analyst (AgriLogistics)": {
+        "Supply Chain Analyst (Ops & DataOps)": {
             "email": "anita@atmosync.org",
             "password": "logistics2026",
             "role": "Supply Chain Analyst",
-            "desc": "Access proximity haulage radii (50-1500 km), cold-chain transit corridors, and route risk.",
+            "desc": "Container GPS route check, IoT sensor health, Kafka-Snowflake-dbt pipeline monitor, food waste saved, and CSV/report exports.",
         },
     }
