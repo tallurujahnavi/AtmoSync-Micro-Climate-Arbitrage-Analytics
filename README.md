@@ -2,48 +2,64 @@
 
 > **Organization:** Infotact Solutions  
 > **Track:** Advanced Data Analytics & Engineering (Global Logistics & Commodities)  
-> **Project 1:** Real-World Applications – Hands-on System Building
+> **Project:** Real-World Applications – Role-Based Cold-Chain & Agro-Climate Platform
 
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![dbt Core](https://img.shields.io/badge/dbt-Core-orange.svg)](https://www.getdbt.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-red.svg)](https://streamlit.io/)
-[![Unit Tests](https://img.shields.io/badge/Unit%20Tests-51%20Passing-brightgreen.svg)]()
+[![Unit Tests](https://img.shields.io/badge/Unit%20Tests-70%20Passing-brightgreen.svg)]()
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 
 ---
 
-## 📌 Problem Statement (Infotact Official Specification)
-Traditional supply chain analytics rely on standard transit times and macro-weather forecasts. They fail to track how real-time, hyper-local micro-climate shifts (e.g., sudden temperature/humidity spikes inside a refrigerated shipping container) degrade agricultural commodities before they reach the market.
+## 📌 Problem Statement
+Traditional supply chain analytics rely only on delivery ETAs and regional city weather forecasts. They miss sudden micro-climate spikes (temperature, humidity, and road vibration shifts inside refrigerated shipping containers) that accelerate biological spoilage before perishable produce reaches the market.
 
-## 🎯 Use Case
-A commodities trader at **Infotact** monitors the **AtmoSync** dashboard. The streaming pipeline detects that **Container A's** internal temperature has drifted from its optimal band, accelerating the spoilage rate of the avocados inside. 
+## 🎯 How AtmoSync Solves It
+**AtmoSync** monitors live container micro-climate telemetry, models shelf-life decay, and compares staying on the primary route against diverting to a closer secondary wholesale market (**Spoilage Arbitrage**). Alongside live transit decisions, the platform provides seasonal crop suitability scoring (**CSI 0–100**), farm ROI planning, ML warming forecasts, and end-to-end data pipeline quality monitoring across **three strictly separated role workspaces**.
 
-The dashboard instantly calculates **"Spoilage Arbitrage"** and alerts the trader to reroute the shipment to a closer, secondary market—securing a premium price before the goods degrade below commercial quality thresholds.
+> **Note:** Live IoT telemetry, Kafka streaming metrics, and market feeds in this repository are simulated for local demonstration and academic evaluation.
 
 ---
 
-## 📐 Mathematical Formulation: Spoilage Arbitrage
+## 🏗️ System Architecture & Data Pipeline
 
-### 1. Thermal Respiration Degradation Kinetics (Arrhenius / $Q_{10}$)
-When a refrigerated reefer container experiences compressor failure or insulation breach, the biological spoilage rate accelerates exponentially:
+```text
+[Python IoT Telemetry Simulator] (Temp, Humidity, Vibration, GPS)
+               │
+               ▼
+[Apache Kafka Stream Simulator]  (Throughput & Consumer Lag Benchmark)
+               │
+               ▼
+[Snowflake SQL Warehouse DDL]    (RAW / STAGING / MARTS + RBAC Roles)
+               │
+               ▼
+[dbt Core SQL Models]            (stg_container_telemetry + fct_spoilage_arbitrage)
+               │
+               ▼
+[Streamlit Role-Based Portal]    (Two-Column Auth + 3 Exclusive Role Dashboards)
+```
+
+---
+
+## 📐 Core Analytical Models
+
+### 1. Thermal Spoilage Kinetics ($Q_{10}$ / Arrhenius Decay)
+When a refrigerated container experiences cooling drift or insulation loss, biological respiration increases exponentially:
 
 $$
 M_{\text{spoilage}} = Q_{10}^{\frac{\Delta T}{10}} \times \left(1 + \frac{|\text{Hum} - \text{Hum}_{\text{ideal}}|}{100} \times \alpha\right)
 $$
-
-The remaining shelf life (in hours) decreases dynamically:
 
 $$
 \text{ShelfLife}_{\text{remaining}} = \frac{\text{BaseShelfLife}}{M_{\text{spoilage}}}
 $$
 
 ### 2. Spoilage Arbitrage Financial Decision
-If $\text{ShelfLife}_{\text{remaining}} < T_{\text{primary\_destination}}$, continuing on the primary route causes total commercial rejection on arrival ($\text{Salvage} \approx 5\%$).
-
-By diverting to a closer secondary market ($T_{\text{secondary}} < \text{ShelfLife}_{\text{remaining}}$):
+If $\text{ShelfLife}_{\text{remaining}} < T_{\text{primary\_destination}}$, continuing to the primary destination risks commercial rejection. By rerouting early to a closer secondary market ($T_{\text{secondary}} < \text{ShelfLife}_{\text{remaining}}$):
 
 $$
-\text{Net Secondary Value} = (V_{\text{cargo}} \times P_{\text{secondary\_factor}}) - (\text{Distance}_{\text{sec}} \times \text{Tonnage} \times C_{\text{haulage}})
+\text{Net Secondary Value} = (V_{\text{cargo}} \times P_{\text{secondary\_factor}}) - \text{Transport, Fuel, Toll \& APMC Mandi Costs}
 $$
 
 $$
@@ -52,23 +68,44 @@ $$
 
 ---
 
-## 🏗️ Architecture & Technology Stack
+## 🔐 Role-Based Workspaces & Features (Strict RBAC)
 
-```
-[IoT Telemetry Simulator] (Temp, Hum, Vibration)
-           │
-           ▼
-[Apache Kafka Event Stream] (High-throughput Streaming Ingestion)
-           │
-           ▼
-[Snowflake / Cloud Warehouse] (Raw JSON Variant Tables)
-           │
-           ▼
-[dbt Core Transformations] (stg_telemetry + fct_spoilage_arbitrage.sql)
-           │
-           ▼
-[AtmoSync BI & Executive Desk] (Streamlit / Superset Trader Portal)
-```
+AtmoSync launches on a two-column authentication portal (`src/views/auth_view.py`) supporting **SHA-256 email sign-in**, **account registration**, and **one-click demo login** for three dedicated roles with zero overlapping tabs:
+
+### 1. 💼 Commodities Trader (`src/views/cold_chain_view.py`)
+Focused on protecting cargo capital and timing market rerouting decisions:
+- **🚨 Live Arbitrage & Reroute:** Real-time container telemetry, spoilage risk flags, and one-click secondary market diversion decisions.
+- **📉 Shelf-Life Decay Curve:** Interactive comparison of optimal refrigeration vs. thermal-drift quality degradation over time.
+- **💰 Profit & Transport Cost:** Breakdown of diesel fuel surcharges, highway tolls, carbon levies, and state APMC mandi fees (`src/tax_fuel_optimizer.py`).
+- **🎲 Delay & Heatwave Risk Sim:** 1,000-iteration Monte Carlo spoilage simulation reporting 95%/99% Value-at-Risk (VaR) and pre-cooling guidance (`src/monte_carlo_risk.py`).
+- **🔔 Slack & Email Alerts:** Automated webhook dispatchers with Slack Block Kit preview and alert audit log (`src/alerts.py`).
+
+### 2. 🌾 Agronomist (`src/views/agro_view.py`)
+Focused on regional crop suitability, sourcing intelligence, and harvest economics:
+- **📊 Regional Summary:** Ranked location table using the Crop Suitability Index (CSI 0–100) across staple crops.
+- **🗺️ Suitability Map:** Interactive geographic scatter map of regional CSI and arbitrage gaps.
+- **📍 Nearby Better Hubs:** Haversine proximity search (50–1,500 km) to discover higher-suitability sourcing hubs (`src/arbitrage.py`).
+- **💵 Farm Yield & Profit:** Yield gain (quintals), MSP gross revenue, haulage cost, net profit (₹ INR), and breakeven distance (`src/economics.py`).
+- **🌦️ Trends & Crop Seasons:** Rolling-average weather trends and seasonal aggregation across Kharif, Rabi, and Zaid.
+- **🤖 Correlation & ML Forecast:** Feature correlation heatmap, One-Way ANOVA test, and Random Forest climate-warming predictor (`+1.5°C` to `+3.0°C`, `src/ml_forecaster.py`).
+
+### 3. 🚚 Supply Chain Analyst (`src/views/supply_chain_view.py`)
+Focused on IoT data reliability, corridor safety, pipeline health, sustainability, and governance:
+- **🗺️ Live Route & Corridor Check:** Container GPS tracking and 35 km highway corridor geofencing (`src/geofencing.py`).
+- **🌡️ IoT Sensor Health Check:** Vibration noise suppression (`>1.20g`) and thermocouple drift calibration (`src/sensor_calibration.py`).
+- **⚙️ Kafka-Snowflake-dbt Pipeline:** Streaming throughput benchmark (`src/kafka_pipeline.py`), latency SLA profiler (`src/profiler.py`), WebSocket gateway (`src/websocket_gateway.py`), and data contract/DLQ validator (`src/data_quality.py`).
+- **🌱 Food Saved & Carbon Impact:** Scope 3 methane avoidance vs. detour diesel emissions and Voluntary Carbon Market credit estimates (`src/esg_sustainability.py`).
+- **📋 Reports & Role Access Log:** Downloadable telemetry CSV, SHA-256 signed Markdown compliance reports (`src/reports.py`), and tamper-evident RBAC access ledger (`src/audit_logger.py`).
+
+---
+
+## 👥 Demo Login Credentials
+
+| Role | Email | Password | Workspace Opened |
+| :--- | :--- | :--- | :--- |
+| 💼 **Commodities Trader** | `trader@infotact.in` | `trader2026` | Trader Arbitrage Dashboard (5 tabs) |
+| 🌾 **Agronomist** | `jahnavi@atmosync.org` | `agro2026` | Crop & Climate Lab (6 tabs) |
+| 🚚 **Supply Chain Analyst** | `anita@atmosync.org` | `logistics2026` | Supply Chain & Pipeline Monitor (5 tabs) |
 
 ---
 
@@ -76,65 +113,81 @@ $$
 
 ```text
 atmosync-microclimate/
-├── app.py                      # Interactive Commodities Trader & Arbitrage Portal
-├── requirements.txt            # Python dependencies
-├── README.md                   # Project documentation & Infotact specifications
+├── app.py                              # Main Streamlit entrypoint & strict RBAC router
+├── make_sample_data.py                 # Synthetic weather dataset generator
+├── requirements.txt                    # Python dependencies
+├── Dockerfile                          # Multi-stage container build
+├── docker-compose.yml                  # Containerized service orchestration
+├── README.md                           # Project documentation
+├── .github/workflows/ci.yml            # GitHub Actions CI matrix (lint + unit tests)
+├── scripts/
+│   └── healthcheck.py                  # Pre-flight runtime, import & kinetics verifier
 ├── sql/
-│   └── snowflake_schema.sql    # Snowflake Cloud DWH DDL (Raw, Staging, Marts, RBAC)
+│   └── snowflake_schema.sql            # Snowflake Cloud DWH DDL (Raw, Staging, Marts, RBAC)
 ├── dbt/
-│   ├── dbt_project.yml         # dbt project configuration
+│   ├── dbt_project.yml                 # dbt project configuration
 │   └── models/
-│       ├── staging/
-│       │   ├── stg_container_telemetry.sql   # JSON payload extraction & cleaning
-│       │   └── stg_commodity_pricing.sql     # Wholesale spot market pricing
-│       └── marts/
-│           ├── fct_spoilage_arbitrage.sql    # Degradation curves & arbitrage in pure SQL
-│           └── fct_spoilage_arbitrage_materialized.sql # Clustered materialized view (Week 4 DWH optimization)
+│       ├── staging/                    # stg_container_telemetry.sql, stg_commodity_pricing.sql
+│       └── marts/                      # fct_spoilage_arbitrage.sql, materialized view
 ├── data/
-│   ├── raw/                    # Raw datasets (Kaggle & synthetic time-series)
-│   ├── processed/              # Normalized datasets
-│   ├── users.json              # Local persistent user datastore
-│   └── alert_history.json      # Dispatched Slack & Email webhook audit log
+│   ├── raw/                            # Kaggle GlobalWeatherRepository.csv & synthetic CSV
+│   ├── processed/                      # Normalized datasets
+│   ├── users.json                      # Local persistent user datastore
+│   └── alert_history.json              # Slack & Email webhook dispatch history
 ├── notebooks/
-│   ├── 01_data_understanding.ipynb          # Phase 1: Ingestion & Profiling
-│   └── 02_exploratory_data_analysis.ipynb    # Phase 2: Agro-Climatic Profiling
+│   ├── 01_data_understanding.ipynb     # Data profiling & schema checks
+│   └── 02_exploratory_data_analysis.ipynb # Agro-climatic exploratory analysis
 ├── reports/
-│   └── data_dictionary.csv     # Automated schema definitions and physical units
+│   └── data_dictionary.csv             # Schema definitions and units
+├── docs/
+│   ├── FINAL_SYSTEM_ARCHITECTURE.md    # End-to-end architecture & data flow
+│   └── BENCHMARK_RESULTS.md            # Latency SLA & throughput benchmarks
 ├── src/
-│   ├── __init__.py
-│   ├── auth.py                 # RBAC, SHA-256 session management & user credentials
-│   ├── iot_simulator.py        # High-velocity container IoT sensor generator
-│   ├── spoilage_arbitrage.py   # Spoilage kinetics & Spoilage Arbitrage calculation
-│   ├── kafka_pipeline.py       # Apache Kafka streaming benchmark & consumer lag monitor
-│   ├── alerts.py               # Slack Block Kit & Email automated webhook alert dispatcher
-│   ├── economics.py            # Economic ROI, yield gains, input savings & breakeven haulage
-│   ├── data_loader.py          # Data ingestion and inspection utilities
-│   ├── arbitrage.py            # Regional agronomic suitability & Haversine metrics
-│   └── views/                  # Modular, concise UI dashboard components
-│       ├── __init__.py
-│       ├── auth_view.py        # Login, registration, and demo persona portal
-│       ├── cold_chain_view.py  # Spoilage Arbitrage trader desk & reroute map
-│       └── agro_view.py        # Crop suitability, regional ANOVA & financial ROI
-└── tests/
-    ├── test_arbitrage.py           # Unit tests for agronomic formulas
-    ├── test_auth.py                # Unit tests for authentication & RBAC
-    ├── test_spoilage_arbitrage.py  # Unit tests for Spoilage Arbitrage calculations
-    ├── test_kafka_pipeline.py      # Unit tests for Kafka streaming & consumer lag
-    ├── test_economics.py           # Unit tests for economic ROI & breakeven distance
-    └── test_alerts.py              # Unit tests for Slack/Email alert dispatchers
+│   ├── auth.py                         # SHA-256 auth, registration & role definitions
+│   ├── iot_simulator.py                # Container IoT sensor telemetry generator
+│   ├── spoilage_arbitrage.py           # Q10 spoilage decay & arbitrage decision engine
+│   ├── monte_carlo_risk.py             # 1,000-run stochastic Value-at-Risk simulator
+│   ├── tax_fuel_optimizer.py           # Diesel, toll, carbon tax & APMC mandi costing
+│   ├── arbitrage.py                    # Crop Suitability Index (CSI) & Haversine hub finder
+│   ├── economics.py                    # Yield gain ROI & breakeven haulage calculator
+│   ├── ml_forecaster.py                # Random Forest warming-scenario predictor
+│   ├── esg_sustainability.py           # Food waste & CO2e abatement analytics
+│   ├── sensor_calibration.py           # Vibration jitter damping & drift filter
+│   ├── geofencing.py                   # Highway corridor deviation auditor
+│   ├── data_quality.py                 # Schema drift & Dead-Letter Queue validator
+│   ├── kafka_pipeline.py               # Kafka streaming throughput & lag benchmark
+│   ├── websocket_gateway.py            # Channel-multiplexed WebSocket simulator
+│   ├── profiler.py                     # Latency timing decorator & SLA auditor
+│   ├── alerts.py                       # Slack Block Kit & Email webhook alerts
+│   ├── reports.py                      # Signed Markdown compliance & CSV exporter
+│   ├── audit_logger.py                 # Hash-chained RBAC authorization ledger
+│   ├── data_loader.py                  # Weather CSV loader & IQR outlier handling
+│   └── views/
+│       ├── auth_view.py                # Two-column sign-in, registration & 1-click demos
+│       ├── cold_chain_view.py          # Commodities Trader dashboard
+│       ├── agro_view.py                # Agronomist dashboard
+│       └── supply_chain_view.py        # Supply Chain Analyst dashboard
+└── tests/                              # 19 unit test suites (70 tests total)
+    ├── test_alerts.py
+    ├── test_arbitrage.py
+    ├── test_audit_logger.py
+    ├── test_auth.py
+    ├── test_data_quality.py
+    ├── test_economics.py
+    ├── test_esg_sustainability.py
+    ├── test_geofencing.py
+    ├── test_healthcheck.py
+    ├── test_kafka_pipeline.py
+    ├── test_ml_forecaster.py
+    ├── test_monte_carlo_risk.py
+    ├── test_profiler.py
+    ├── test_reports.py
+    ├── test_role_views.py
+    ├── test_sensor_calibration.py
+    ├── test_spoilage_arbitrage.py
+    ├── test_tax_fuel_optimizer.py
+    └── test_websocket_gateway.py
 ```
-
----
-
-## 👥 Demo Credentials for Mentors
-
-| Persona / Role | Email | Password | Scope & Primary Dashboard Focus |
-| :--- | :--- | :--- | :--- |
-| **Commodities Trader** | `trader@infotact.in` | `trader2026` | Real-time container telemetry, spoilage decay curves, and Spoilage Arbitrage rerouting. |
-| **Agronomist** | `jahnavi@atmosync.org` | `agro2026` | Deep biochemical tolerance bands, climate stress thresholds, and biological suitability indices. |
-| **Supply Chain Analyst** | `anita@atmosync.org` | `logistics2026` | Proximity search, Haversine transport radii (50–1500 km), and inter-district trade gaps. |
-
-*(A **"One-Click Persona Login"** tab is available on the login screen for instant evaluation).*
 
 ---
 
@@ -152,7 +205,7 @@ pip install -r requirements.txt
 python scripts/healthcheck.py
 ```
 
-### 3. Run All 51 Unit Tests
+### 3. Run All 70 Unit Tests
 ```powershell
 python -m unittest discover -s tests -p "test_*.py"
 ```
@@ -169,6 +222,6 @@ streamlit run app.py
 
 ---
 
-## 📚 Technical Specifications & Benchmarks
+## 📚 Technical Documentation
 - [Final System Architecture & Flowchart](docs/FINAL_SYSTEM_ARCHITECTURE.md)
 - [Pipeline Performance & SLA Benchmarks](docs/BENCHMARK_RESULTS.md)
