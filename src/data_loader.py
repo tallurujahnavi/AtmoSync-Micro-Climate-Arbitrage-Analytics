@@ -5,6 +5,7 @@ Description: Beginner-friendly, robust data loading and structural inspection
              for Phase 1 data understanding.
 """
 
+from multiprocessing.reduction import duplicate
 import os
 from pathlib import Path
 from typing import Dict, Tuple, Optional
@@ -98,9 +99,15 @@ def load_dataset(file_path: Optional[str] = None) -> Tuple[pd.DataFrame, bool]:
 
     if df.empty:
         raise ValueError("CSV file contains no data rows.")
-
     if len(df.columns) == 0:
         raise ValueError("CSV file contains no columns.")
+
+    duplicate_count = df.duplicated().sum()
+
+    if duplicate_count > 0:
+        print(f"[WARNING] Dataset contains {duplicate_count} duplicate rows.")
+    else:
+        print("[AtmoSync Data Loader] No duplicate rows found.")
 
     return df, is_synthetic
 
