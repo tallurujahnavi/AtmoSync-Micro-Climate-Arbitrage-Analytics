@@ -202,7 +202,7 @@ Data visualization helps understand the relationship between temperature and hum
 2. Humidity data analysis and correlation profiling (`src/climate_telemetry.py`).
 3. Z-score anomaly detection & commodity safe-band excursion alerts.
 4. Automated unit test coverage (`tests/test_climate_telemetry.py`).
-5. Python IoT container telemetry simulator with route GPS interpolation & fault injection (`src/iot_simulator.py`, `tests/test_iot_simulator.py`).
+5. Python IoT container telemetry simulator with route GPS interpolation & fault injection (`src/iot_simulator.py`, `tests/test_iot_simulator.py`) plus partitioned Kafka-style streaming producer/consumer & DLQ handler (`src/telemetry_stream.py`, `tests/test_telemetry_stream.py`).
 6. Snowflake Cloud DWH DDL (`sql/snowflake_schema.sql`), stage `COPY INTO` seed script (`sql/snowflake_seed_load.sql`), storage/pricing CSV seeds (`data/commodity_pricing.csv`, `data/commodity_storage_profiles.csv`), and staging loader (`src/warehouse_loader.py`, `tests/test_snowflake_schema.py`, `tests/test_warehouse_loader.py`).
 7. dbt Core project configuration and SQL staging models (`dbt/dbt_project.yml`, `dbt/models/staging/`, `tests/test_dbt_staging.py`) for Mid-Project pipeline validation.
 8. Singular dbt data-integrity SQL tests (`dbt/tests/`) and Mid-Project Review validation runner (`scripts/validate_mid_project.py`, `tests/test_mid_project_validation.py`).
