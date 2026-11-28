@@ -285,3 +285,9 @@ for exploring microclimate and agricultural arbitrage analytics.
 - Data Quality
 
 The dashboard supports interactive exploration of microclimate data and agricultural arbitrage insights.
+
+## Analytics Features
+
+AtmoSync provides microclimate data analysis, crop suitability insights,
+geographical visualization, distance calculations, and agricultural
+arbitrage discovery through an interactive dashboard.
