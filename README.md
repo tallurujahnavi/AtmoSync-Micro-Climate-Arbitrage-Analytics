@@ -291,3 +291,9 @@ The dashboard supports interactive exploration of microclimate data and agricult
 AtmoSync provides microclimate data analysis, crop suitability insights,
 geographical visualization, distance calculations, and agricultural
 arbitrage discovery through an interactive dashboard.
+
+## Data Exploration
+
+The application allows users to explore climate patterns, compare
+regional conditions, inspect seasonal trends, and identify potential
+agricultural arbitrage opportunities using distance-based analysis.
