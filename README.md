@@ -284,5 +284,4 @@ for exploring microclimate and agricultural arbitrage analytics.
 - Statistical Analysis
 - Data Quality
 
-Users can explore all analytics sections on a single page
-without switching between tabs.
+The dashboard supports interactive exploration of microclimate data and agricultural arbitrage insights.
